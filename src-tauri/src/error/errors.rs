@@ -10,6 +10,7 @@ pub enum AppError {
     Store(String),
     InvalidInput(String),
     Custom(String),
+    TomlError(String)
 }
 
 impl fmt::Display for AppError {
@@ -21,6 +22,7 @@ impl fmt::Display for AppError {
             AppError::Store(message) => write!(f, "Store error: {}", message),
             AppError::InvalidInput(message) => write!(f, "Invalid input: {}", message),
             AppError::Custom(message) => write!(f, "Error: {}", message),
+            AppError::TomlError(message) => write!(f, "Toml error: {}", message),
         }
     }
 }
@@ -48,5 +50,17 @@ impl From<String> for AppError {
 impl From<&str> for AppError {
     fn from(err: &str) -> Self {
         AppError::Custom(err.to_string())
+    }
+}
+
+impl From<toml::ser::Error> for AppError {
+    fn from(err: toml::ser::Error) -> Self {
+        AppError::TomlError(err.to_string())
+    }
+}
+
+impl From<toml::de::Error> for AppError {
+    fn from(err: toml::de::Error) -> Self {
+        AppError::TomlError(err.to_string())
     }
 }

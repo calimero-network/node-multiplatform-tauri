@@ -25,6 +25,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .invoke_handler(tauri::generate_handler![
             commands::node_commands::initialize_node,
             commands::node_commands::fetch_nodes,
+            commands::node_commands::update_node,
         ])
         .run(tauri::generate_context!())?;
 

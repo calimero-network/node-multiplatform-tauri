@@ -33,6 +33,7 @@ pub struct OperationResult {
 pub struct NodeInfo {
     pub name: String,
     pub is_running: bool,
+    pub run_on_startup: bool,
     pub node_ports: NodeConfig,
 }
 
