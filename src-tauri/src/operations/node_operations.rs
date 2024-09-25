@@ -1,3 +1,4 @@
+use chrono::Local;
 use serde_json::Value;
 use std::{
     fs,
@@ -10,6 +11,7 @@ use tauri::State;
 
 use crate::{
     error::errors::AppError,
+    logger::logger::{create_log_file, write_to_log},
     store::store::{get_run_node_on_startup, update_run_node_on_startup},
     types::types::{AppState, NodeInfo, NodeProcess, OperationResult, Result},
     utils::utils::{
@@ -51,6 +53,21 @@ pub async fn create_node(
             message: strip_ansi_escapes(&String::from_utf8_lossy(&output.stderr)),
         });
     }
+
+    create_log_file(&state.app_handle, &node_name)?;
+    // Write stdout and stderr to log
+    write_to_log(
+        &state.app_handle,
+        &node_name,
+        &strip_ansi_escapes(&String::from_utf8_lossy(&output.stdout)),
+    )
+    .map_err(|e| AppError::Custom(format!("Failed to log stdout: {}", e)))?;
+    write_to_log(
+        &state.app_handle,
+        &node_name,
+        &strip_ansi_escapes(&String::from_utf8_lossy(&output.stderr)),
+    )
+    .map_err(|e| AppError::Custom(format!("Failed to log stderr: {}", e)))?;
 
     update_run_node_on_startup(&state, &node_name, run_on_startup)?;
 
@@ -227,12 +244,20 @@ pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result
         .take()
         .ok_or_else(|| AppError::Custom("Failed to capture stderr".to_string()))?;
 
-    // Spawn a  thread to handle stdin
+    // Spawn a thread to handle stdin
     std::thread::spawn({
         let node_name = node_name.clone();
+        let app_handle = state.app_handle.clone();
         move || {
             let mut stdin = stdin;
             for input in rx {
+                // Log the stdin input
+                if let Err(e) = write_to_log(&app_handle, &node_name, &format!("STDIN: {}", input))
+                {
+                    eprintln!("Failed to log stdin for node {}: {}", node_name, e);
+                }
+
+                // Write to stdin
                 if writeln!(stdin, "{}", input).is_err() {
                     eprintln!("Failed to write to stdin for node: {}", node_name);
                     break;
@@ -263,6 +288,8 @@ pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result
                     output_lock.push_str(&cleaned_line);
                     output_lock.push('\n');
                 }
+                write_to_log(&app_handle, &node_name, &cleaned_line)
+                    .map_err(|e| AppError::Custom(format!("Failed to log output: {}", e)))?;
                 app_handle
                     .emit_all(&format!("node-output-{}", node_name), cleaned_line + "\n")
                     .map_err(|e| {
@@ -355,6 +382,16 @@ pub async fn stop_node_process(
         kill_node_process(&node_name)
             .map_err(|e| AppError::Process(format!("Failed to stop node: {}", e)))?;
     }
+
+    let timestamp = Local::now().format("%Y-%m-%dT%H:%M:%S.%6fZ");
+    write_to_log(
+        &state.app_handle,
+        &node_name,
+        &format!(
+            "{} Node '{}' has been stopped successfully.",
+            timestamp, node_name
+        ),
+    )?;
 
     Ok(OperationResult {
         success: true,

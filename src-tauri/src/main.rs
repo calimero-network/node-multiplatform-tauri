@@ -6,6 +6,7 @@ use utils::setup::{setup_app_state, setup_store};
 
 mod commands;
 mod error;
+mod logger;
 mod operations;
 mod store;
 mod types;
@@ -30,6 +31,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             commands::node_commands::get_node_current_output,
             commands::node_commands::stop_node,
             commands::node_commands::send_input,
+            commands::node_commands::get_node_log,
         ])
         .run(tauri::generate_context!())?;
 

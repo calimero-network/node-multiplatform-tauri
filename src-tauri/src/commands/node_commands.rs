@@ -1,6 +1,7 @@
 use tauri::State;
 
 use crate::{
+    logger::logger::read_log_file,
     operations::node_operations::{
         create_node, get_node_output, get_nodes, send_input_to_node, start_node as start,
         stop_node_process, update_node_config,
@@ -69,4 +70,9 @@ pub async fn send_input(
     state: State<'_, AppState>,
 ) -> Result<String> {
     send_input_to_node(node_name, input, state)
+}
+
+#[tauri::command]
+pub async fn get_node_log(state: State<'_, AppState>, node_name: String) -> Result<String> {
+    read_log_file(state, &node_name)
 }
