@@ -1591,10 +1591,13 @@ checksum = "650eef8c711430f1a879fdd01d4745a7deea475becfb90269c06775983bbf086"
 name = "node-multiplatform-tauri"
 version = "0.1.0"
 dependencies = [
+ "lazy_static",
  "serde",
  "serde_json",
  "tauri",
  "tauri-build",
+ "tauri-plugin-store",
+ "toml 0.8.19",
 ]
 
 [[package]]
@@ -2752,6 +2755,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "tauri-plugin-store"
+version = "0.0.0"
+source = "git+https://github.com/tauri-apps/plugins-workspace?branch=v1#0b59bc7096dfc7ff1b141c31457a2a0a4a5f9ad1"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+ "tauri",
+ "thiserror",
+]
+
+[[package]]
 name = "tauri-runtime"
 version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2979,7 +2994,7 @@ dependencies = [
  "serde",
  "serde_spanned",
  "toml_datetime",
- "toml_edit 0.22.20",
+ "toml_edit 0.22.21",
 ]
 
 [[package]]
@@ -3006,9 +3021,9 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.22.20"
+version = "0.22.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "583c44c02ad26b0c3f3066fe629275e50627026c51ac2e595cca4c230ce1ce1d"
+checksum = "3b072cee73c449a636ffd6f32bd8de3a9f7119139aff882f44943ce2986dc5cf"
 dependencies = [
  "indexmap 2.5.0",
  "serde",
