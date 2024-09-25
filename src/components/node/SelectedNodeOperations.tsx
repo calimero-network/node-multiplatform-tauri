@@ -4,6 +4,7 @@ import NodeConfig from './NodeConfig';
 import { UpdateNodeConfigParams, CommandResponse, NodeDetails } from '../../hooks/useNodeManagement';
 import { OperationsContainer, NodeTitle, NodeActions, MainContent } from '../../styles/SelectedNodeOperationsStyles';
 import NodeControls from './NodeControls';
+import NodeLogs from './NodeLogs';
 
 interface SelectedNodeOperationsProps {
   selectedNode: NodeDetails;
@@ -13,7 +14,7 @@ interface SelectedNodeOperationsProps {
 }
 
 const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selectedNode, handleNodeConfigUpdate, handleNodeStart, handleNodeStop }) => {
-  const [activeSection, setActiveSection] = useState<'config' | 'controls' | null>('controls');
+  const [activeSection, setActiveSection] = useState<'config' | 'controls' | 'logs' | null>('controls');
 
   return (
     <OperationsContainer>
@@ -24,6 +25,9 @@ const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selecte
         </Button>
         <Button onClick={() => setActiveSection('config')} variant='configure'>
           Configure Node
+        </Button>
+        <Button onClick={() => setActiveSection('logs')} variant='logs'>
+          Node Logs
         </Button>
       </NodeActions>
       <MainContent>
@@ -39,6 +43,12 @@ const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selecte
             selectedNode={selectedNode}
             handleNodeStart={handleNodeStart}
             handleNodeStop={handleNodeStop}
+          />
+        )}
+        {activeSection === 'logs' && (
+          <NodeLogs
+            selectedNode={selectedNode}
+            onClose={() => setActiveSection(null)}
           />
         )}
       </MainContent>
