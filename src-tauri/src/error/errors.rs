@@ -10,7 +10,7 @@ pub enum AppError {
     Store(String),
     InvalidInput(String),
     Custom(String),
-    TomlError(String)
+    TomlError(String),
 }
 
 impl fmt::Display for AppError {

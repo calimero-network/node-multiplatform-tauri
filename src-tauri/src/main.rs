@@ -26,6 +26,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             commands::node_commands::initialize_node,
             commands::node_commands::fetch_nodes,
             commands::node_commands::update_node,
+            commands::node_commands::start_node,
+            commands::node_commands::get_node_current_output,
+            commands::node_commands::stop_node,
+            commands::node_commands::send_input,
         ])
         .run(tauri::generate_context!())?;
 

@@ -25,12 +25,11 @@ pub fn update_run_node_on_startup(
     }
 }
 
-
-pub fn get_run_node_on_startup(
-    state: &State<'_, AppState>,
-    node_name: &str,
-) -> Result<bool> {
-    let store = state.store.lock().map_err(|e| AppError::Store(e.to_string()))?;
+pub fn get_run_node_on_startup(state: &State<'_, AppState>, node_name: &str) -> Result<bool> {
+    let store = state
+        .store
+        .lock()
+        .map_err(|e| AppError::Store(e.to_string()))?;
     Ok(store
         .get(&format!("{}_run_on_startup", node_name))
         .and_then(|value| value.as_bool())

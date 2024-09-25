@@ -1,7 +1,9 @@
 use lazy_static::lazy_static;
 use serde_json::Value;
+use std::net::{SocketAddr, TcpStream};
 use std::path::PathBuf;
 use std::process::Command;
+use std::time::Duration;
 use std::{env, fs};
 use tauri::regex::Regex;
 use tauri::AppHandle;
@@ -87,4 +89,36 @@ fn extract_port(config: &Value, key: &str) -> Result<u32> {
         .and_then(|v| v.split('/').nth(4))
         .and_then(|v| v.parse().ok())
         .ok_or_else(|| AppError::Custom(format!("Failed to extract {} port", key)))
+}
+
+pub fn is_port_in_use(port: u32) -> bool {
+    match format!("127.0.0.1:{}", port).parse::<SocketAddr>() {
+        Ok(addr) => TcpStream::connect_timeout(&addr, Duration::from_secs(1)).is_ok(),
+        Err(_) => false,
+    }
+}
+
+pub fn check_ports_availability(config: &NodeConfig) -> Result<()> {
+    if is_port_in_use(config.server_port) || is_port_in_use(config.swarm_port) {
+        return Err(AppError::Custom(format!(
+            "Port {} or {} is already in use",
+            config.server_port, config.swarm_port
+        )));
+    }
+    Ok(())
+}
+
+pub fn kill_node_process(node_name: &str) -> std::io::Result<()> {
+    let output = Command::new("pkill")
+        .args(&["-f", &format!("meroctl.*--node-name {}.*run", node_name)])
+        .output()?;
+
+    if !output.status.success() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            String::from_utf8_lossy(&output.stderr),
+        ));
+    }
+
+    Ok(())
 }

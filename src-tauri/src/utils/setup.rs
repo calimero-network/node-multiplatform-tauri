@@ -1,13 +1,12 @@
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use std::fs;
+use std::sync::{Arc, Mutex};
 use tauri::{App, AppHandle, Wry};
 use tauri_plugin_store::{Store, StoreBuilder};
 
 use crate::types::types::{AppState, NodeManager};
 
 pub fn setup_store(app: &App) -> Result<Store<Wry>, Box<dyn std::error::Error>> {
-    
     let store_path = app
         .path_resolver()
         .app_data_dir()
