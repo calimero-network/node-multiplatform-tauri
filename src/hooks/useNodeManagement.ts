@@ -90,6 +90,28 @@ const useNodeManagement = () => {
       throw error;
     }
   };
+  
+  const handleNodeStart = async (nodeName: string): Promise<CommandResponse> => {
+    try {
+      const result = await invoke<CommandResponse>('start_node', { nodeName });
+      await refreshNodesList();
+      return result;
+    } catch (error) {
+      console.error('Error starting node:', error);
+      throw error;
+    }
+  };
+
+  const handleNodeStop = async (nodeName: string): Promise<CommandResponse> => {
+    try {
+      const result = await invoke<CommandResponse>('stop_node', { nodeName });
+      await refreshNodesList();
+      return result;
+    } catch (error) {
+      console.error('Error stopping node:', error);
+      return { success: false, message: `Error: ${error}` };
+    }
+  };
 
   return {
     nodes,
@@ -99,6 +121,8 @@ const useNodeManagement = () => {
     handleNodeInitialize,
     refreshNodesList,
     handleNodeConfigUpdate,
+    handleNodeStart,
+    handleNodeStop
   };
 };
 

@@ -16,6 +16,8 @@ const Dashboard: React.FC = () => {
     handleNodeSelect,
     handleNodeInitialize,
     handleNodeConfigUpdate,
+    handleNodeStart,
+    handleNodeStop,
   } = useNodeManagement();
 
   return (
@@ -41,6 +43,8 @@ const Dashboard: React.FC = () => {
               <SelectedNodeOperations
                 selectedNode={selectedNode}
                 handleNodeConfigUpdate={handleNodeConfigUpdate}
+                handleNodeStart={handleNodeStart}
+                handleNodeStop={handleNodeStop}
               />
           }   
         </ContentArea>
