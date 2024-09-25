@@ -6,6 +6,7 @@ import Header from '../components/layout/Header';
 import PopupWrapper from '../components/common/PopupWrapper';
 import NodeInitializationPopup from '../components/node/NodeInitializationPopup';
 import { DashboardContainer, MainContent, Sidebar, ContentArea } from '../styles/DashboardStyles';
+import SelectedNodeOperations from '../components/node/SelectedNodeOperations';
 
 const Dashboard: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);
@@ -14,6 +15,7 @@ const Dashboard: React.FC = () => {
     selectedNode,
     handleNodeSelect,
     handleNodeInitialize,
+    handleNodeConfigUpdate,
   } = useNodeManagement();
 
   return (
@@ -24,7 +26,7 @@ const Dashboard: React.FC = () => {
           <NodeList 
             nodes={nodes} 
             selectedNode={selectedNode} 
-            onNodeSelect={handleNodeSelect}
+            handleNodeSelect={handleNodeSelect}
           />
           <Button 
             onClick={() => setShowPopup(true)}
@@ -34,7 +36,13 @@ const Dashboard: React.FC = () => {
           </Button>
         </Sidebar>
         <ContentArea>
-        
+          {
+            selectedNode && 
+              <SelectedNodeOperations
+                selectedNode={selectedNode}
+                handleNodeConfigUpdate={handleNodeConfigUpdate}
+              />
+          }   
         </ContentArea>
       </MainContent>
 

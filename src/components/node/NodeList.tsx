@@ -19,11 +19,11 @@ interface NodeStatus {
 
 interface NodeListProps {
   nodes: NodeStatus[];
-  selectedNode: string | null;
-  onNodeSelect: (nodeName: string) => void;
+  selectedNode: NodeStatus | null;
+  handleNodeSelect: (nodeName: string) => void;
 }
 
-const NodeList: React.FC<NodeListProps> = ({ nodes, selectedNode, onNodeSelect }) => {
+const NodeList: React.FC<NodeListProps> = ({ nodes, selectedNode, handleNodeSelect }) => {
   return (
     <NodeListContainer>
       <NodeListTitle>Nodes</NodeListTitle>
@@ -34,8 +34,8 @@ const NodeList: React.FC<NodeListProps> = ({ nodes, selectedNode, onNodeSelect }
             {nodes.map((node) => (
               <NodeListItem 
                 key={node.name} 
-                selected={node.name === selectedNode}
-                onClick={() => onNodeSelect(node.name)}
+                selected={node.name === selectedNode?.name}
+                onClick={() => handleNodeSelect(node.name)}
               >
                 <StatusIcon $isRunning={node.is_running} />
                 {node.name}

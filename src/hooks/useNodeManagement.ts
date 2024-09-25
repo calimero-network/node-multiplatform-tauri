@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/tauri';
 
-interface NodeStatus {
+export interface NodeDetails {
   name: string;
   is_running: boolean;
+  run_on_startup: boolean;
   node_ports: {
     server_port: number;
     swarm_port: number;
@@ -15,13 +16,32 @@ export interface NodeInitializationResult {
   message: string;
 }
 
+export interface UpdateNodeConfigParams {
+  originalNodeName: string;
+  nodeName: string;
+  serverPort: number;
+  swarmPort: number;
+  runOnStartup: boolean;
+}
+
+export interface CommandResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface NodePorts {
+  server_port: number;
+  swarm_port: number;
+}
+
 const useNodeManagement = () => {
-  const [nodes, setNodes] = useState<NodeStatus[]>([]);
-  const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [nodes, setNodes] = useState<NodeDetails[]>([]);
+  const [selectedNode, setSelectedNode] = useState<NodeDetails | null>(null);
 
   const refreshNodesList = async () => {
     try {
-      const nodesStatus = await invoke<NodeStatus[]>('fetch_nodes');
+      const nodesStatus = await invoke<NodeDetails[]>('fetch_nodes');
+      console.log('Nodes status:', nodesStatus);
       setNodes(nodesStatus);
     } catch (error) {
       console.error('Error fetching nodes status:', error);
@@ -33,7 +53,7 @@ const useNodeManagement = () => {
   }, []);
 
   const handleNodeSelect = (nodeName: string) => {
-    setSelectedNode(nodeName);
+    setSelectedNode(nodes.find(node => node.name === nodeName) || null);
   };
 
   const handleNodeInitialize = async (nodeName: string, serverPort: number, swarmPort: number, runOnStartup: boolean): Promise<NodeInitializationResult> => {
@@ -54,6 +74,23 @@ const useNodeManagement = () => {
     }
   };
 
+  const handleNodeConfigUpdate = async (config: UpdateNodeConfigParams): Promise<CommandResponse> => {
+    try {
+      const result = await invoke<CommandResponse>('update_node', {
+        originalNodeName: config.originalNodeName,
+        nodeName: config.nodeName,
+        serverPort: config.serverPort,
+        swarmPort: config.swarmPort,
+        runOnStartup: config.runOnStartup
+      });
+      await refreshNodesList();
+      return result;
+    } catch (error) {
+      console.error('Error updating node config:', error);
+      throw error;
+    }
+  };
+
   return {
     nodes,
     selectedNode,
@@ -61,6 +98,7 @@ const useNodeManagement = () => {
     handleNodeSelect,
     handleNodeInitialize,
     refreshNodesList,
+    handleNodeConfigUpdate,
   };
 };
 
