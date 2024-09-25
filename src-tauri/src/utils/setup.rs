@@ -1,27 +1,18 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
-use std::{env, fs};
+use std::fs;
 use tauri::{App, AppHandle, Wry};
 use tauri_plugin_store::{Store, StoreBuilder};
 
 use crate::types::types::{AppState, NodeManager};
 
 pub fn setup_store(app: &App) -> Result<Store<Wry>, Box<dyn std::error::Error>> {
-    let store_path: PathBuf;
-    #[cfg(debug_assertions)]
-    {
-        store_path = env::current_dir()?.join("node_manager.dat");
-    }
-
-    #[cfg(not(debug_assertions))]
-    {
-        store_path = app
-            .path_resolver()
-            .app_data_dir()
-            .ok_or("Failed to get app data dir")?
-            .join("node_manager.dat");
-    }
+    
+    let store_path = app
+        .path_resolver()
+        .app_data_dir()
+        .ok_or("Failed to get app data dir")?
+        .join("node_manager.dat");
 
     if !store_path.exists() {
         fs::write(&store_path, "{}")?;
