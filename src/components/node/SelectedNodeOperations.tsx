@@ -1,20 +1,30 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Button from '../common/Button';
 import NodeConfig from './NodeConfig';
 import { UpdateNodeConfigParams, CommandResponse, NodeDetails } from '../../hooks/useNodeManagement';
 import { OperationsContainer, NodeTitle, NodeActions, MainContent } from '../../styles/SelectedNodeOperationsStyles';
 import NodeControls from './NodeControls';
 import NodeLogs from './NodeLogs';
+import { TrayAction } from '../../pages/Dashboard';
 
 interface SelectedNodeOperationsProps {
   selectedNode: NodeDetails;
   handleNodeConfigUpdate: ( config: UpdateNodeConfigParams ) => Promise<CommandResponse>;
   handleNodeStart: (nodeName: string) => Promise<CommandResponse>;
   handleNodeStop: (nodeName: string) => Promise<CommandResponse>;
+  trayAction: TrayAction | null;
 }
 
-const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selectedNode, handleNodeConfigUpdate, handleNodeStart, handleNodeStop }) => {
+const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selectedNode, handleNodeConfigUpdate, handleNodeStart, handleNodeStop, trayAction }) => {
   const [activeSection, setActiveSection] = useState<'config' | 'controls' | 'logs' | null>('controls');
+  const [action, setAction] = useState< string | null>(null);
+
+  useEffect(() => {
+    if(trayAction) {
+      setActiveSection(trayAction.section);
+      setAction(trayAction.action);
+    }
+  }, [trayAction]);
 
   return (
     <OperationsContainer>
@@ -43,6 +53,8 @@ const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selecte
             selectedNode={selectedNode}
             handleNodeStart={handleNodeStart}
             handleNodeStop={handleNodeStop}
+            action={action}
+            setAction={setAction}
           />
         )}
         {activeSection === 'logs' && (

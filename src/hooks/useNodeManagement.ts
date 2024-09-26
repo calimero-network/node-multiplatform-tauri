@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/tauri';
 
 export interface NodeDetails {
@@ -36,13 +36,14 @@ export interface NodePorts {
 
 const useNodeManagement = () => {
   const [nodes, setNodes] = useState<NodeDetails[]>([]);
+  const nodesRef = useRef<NodeDetails[]>([]);
   const [selectedNode, setSelectedNode] = useState<NodeDetails | null>(null);
 
   const refreshNodesList = async () => {
     try {
       const nodesStatus = await invoke<NodeDetails[]>('fetch_nodes');
-      console.log('Nodes status:', nodesStatus);
       setNodes(nodesStatus);
+      nodesRef.current = nodesStatus;
     } catch (error) {
       console.error('Error fetching nodes status:', error);
     }
@@ -53,7 +54,7 @@ const useNodeManagement = () => {
   }, []);
 
   const handleNodeSelect = (nodeName: string) => {
-    setSelectedNode(nodes.find(node => node.name === nodeName) || null);
+    setSelectedNode(nodesRef.current.find(node => node.name === nodeName) || null);
   };
 
   const handleNodeInitialize = async (nodeName: string, serverPort: number, swarmPort: number, runOnStartup: boolean): Promise<NodeInitializationResult> => {
@@ -65,7 +66,7 @@ const useNodeManagement = () => {
         runOnStartup
       });
       if (result.success) {
-        await refreshNodesList(); // Refresh the node list and status 
+        await refreshNodesList();
       }
       return result;
     } catch (error: any) {

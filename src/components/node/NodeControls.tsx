@@ -16,17 +16,27 @@ interface NodeControlsProps {
   selectedNode: NodeDetails;
   handleNodeStart: (nodeName: string) => Promise<CommandResponse>;
   handleNodeStop: (nodeName: string) => Promise<CommandResponse>;
+  action: string | null;
+  setAction: (action: string | null) => void;
 }
 
-const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeStart, handleNodeStop }) => {
+const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeStart, handleNodeStop, action, setAction }) => {
   const [output, setOutput] = useState<string>('');
   const [input, setInput] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(selectedNode.is_running);
   const outputRef = useRef<HTMLPreElement>(null);
 
+  useEffect(() => {
+    if (action) {
+      if(action === 'start') {
+        handleStart();
+      } else if (action === 'stop') {
+        handleStop();
+      }
+      setAction(null);
+    }
+  }, [action]);
 
-
-  console.log('NodeControls rendered', selectedNode);
   useEffect(() => {
 
     setIsRunning(selectedNode.is_running);
@@ -42,7 +52,6 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
 
       // Set up new listener
       unsubscribe = await listen(`node-output-${selectedNode.name}`, (event: any) => {
-        console.log('Received event:', event);
         setOutput(prevOutput => prevOutput + event.payload);
       });
     };
@@ -53,7 +62,6 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
     const fetchNodeStatus = async () => {
       try {
         const currentOutput = await invoke<CommandResponse>('get_node_current_output', { nodeName: selectedNode.name });
-        console.log('Current output:', currentOutput);
         if(currentOutput.success){
           setOutput(currentOutput.message);
         }else {
@@ -70,7 +78,6 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
     // Cleanup function
     return () => {
       if (unsubscribe) {
-        console.log(`Cleaning up listener for ${selectedNode}`);
         unsubscribe();
       }
     };
@@ -83,7 +90,6 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
   }, [output]);
 
   const handleStart = async () => {
-    console.log('Starting node...', isRunning);
     if (!isRunning) {
       try {
         setOutput('Starting node...\n');
@@ -92,7 +98,6 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
         if (result.success) {
           setIsRunning(true);
         } else {
-          console.log('Node start failed:', result);
           setIsRunning(false);
         }
       } catch (error) {
@@ -110,7 +115,6 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
   };
 
   const handleStop = async () => {
-    console.log('Stopping node...');
     setOutput(prevOutput => prevOutput + 'Stopping node...\n');
     const result = await handleNodeStop(selectedNode.name);
     if (result.success) {
@@ -141,7 +145,6 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
     }
   };
 
-  console.log('NodeControls rendered', isRunning);
   return (
     <ControlsContainer>
       <ButtonGroup>
