@@ -13,6 +13,7 @@ use crate::{
     error::errors::AppError,
     logger::logger::{create_log_file, write_to_log},
     store::store::{get_run_node_on_startup, update_run_node_on_startup},
+    tray::tray::update_tray_menu,
     types::types::{AppState, NodeInfo, NodeProcess, OperationResult, Result},
     utils::utils::{
         check_ports_availability, get_binary_path, get_node_ports, get_nodes_dir,
@@ -70,6 +71,8 @@ pub async fn create_node(
     .map_err(|e| AppError::Custom(format!("Failed to log stderr: {}", e)))?;
 
     update_run_node_on_startup(&state, &node_name, run_on_startup)?;
+
+    update_tray_menu(state)?;
 
     Ok(OperationResult {
         success: true,
@@ -319,6 +322,8 @@ pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result
     };
     manager.nodes.insert(node_name.clone(), node_process);
 
+    update_tray_menu(state)?;
+
     Ok(OperationResult {
         success: true,
         message: "Node start command issued. Check the output for status.".to_string(),
@@ -392,6 +397,8 @@ pub async fn stop_node_process(
             timestamp, node_name
         ),
     )?;
+
+    update_tray_menu(state)?;
 
     Ok(OperationResult {
         success: true,
