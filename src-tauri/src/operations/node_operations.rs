@@ -6,8 +6,8 @@ use std::{
     process::{Command, Stdio},
     sync::{mpsc, Arc, Mutex},
 };
-use tauri::Manager;
 use tauri::State;
+use tauri::{AppHandle, Manager};
 
 use crate::{
     error::errors::AppError,
@@ -429,4 +429,76 @@ pub fn send_input_to_node(
         .send(input)
         .map_err(|e| AppError::Custom(format!("Failed to send input: {}", e)))?;
     Ok("Input sent successfully".to_string())
+}
+
+pub async fn delete_node(state: State<'_, AppState>, node_name: String) -> Result<OperationResult> {
+    let nodes_dir = get_nodes_dir(&state.app_handle);
+    let node_dir = nodes_dir.join(&node_name);
+
+    if !node_dir.exists() {
+        return Ok(OperationResult {
+            success: false,
+            message: format!("Node '{}' does not exist.", node_name),
+        });
+    }
+
+    // Ensure the node is not running
+    if is_node_process_running(&node_name) {
+        return Ok(OperationResult {
+            success: false,
+            message: format!(
+                "Node '{}' is currently running. Please stop it before deleting.",
+                node_name
+            ),
+        });
+    }
+
+    // Delete the node directory
+    fs::remove_dir_all(&node_dir).map_err(|e| AppError::IoError(e.to_string()))?;
+
+    // Remove from run_on_startup if present
+    {
+        let mut store = state
+            .store
+            .lock()
+            .map_err(|e| AppError::Custom(format!("Failed to lock store: {}", e)))?;
+        let key = format!("{}_run_on_startup", node_name);
+        if store.get(&key).is_some() {
+            store
+                .delete(&key)
+                .map_err(|e| AppError::Store(e.to_string()))?;
+            store.save().map_err(|e| AppError::Store(e.to_string()))?;
+        }
+    }
+
+    // Update tray menu
+    update_tray_menu(state)?;
+
+    Ok(OperationResult {
+        success: true,
+        message: format!("Node '{}' has been deleted successfully.", node_name),
+    })
+}
+
+pub fn open_admin_dashboard(app_handle: AppHandle, node_name: String) -> Result<OperationResult> {
+    let config = get_node_ports(&node_name, &app_handle)?;
+    let url = format!("http://localhost:{}/admin-dashboard", config.server_port);
+
+    let (cmd, args) = if cfg!(target_os = "windows") {
+        ("cmd", vec!["/C", "start", url.as_str()])
+    } else if cfg!(target_os = "macos") {
+        ("open", vec![url.as_str()])
+    } else {
+        ("xdg-open", vec![url.as_str()])
+    };
+
+    Command::new(cmd)
+        .args(args)
+        .spawn()
+        .map_err(|e| AppError::Custom(format!("Failed to open URL: {}", e)))?;
+
+    Ok(OperationResult {
+        success: true,
+        message: format!("Opened admin dashboard for node {}", node_name),
+    })
 }

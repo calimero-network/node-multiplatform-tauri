@@ -1,4 +1,5 @@
 use crate::error::errors::AppError;
+use crate::operations::node_operations::open_admin_dashboard;
 use crate::types::types::NodeInfo;
 use crate::{
     operations::node_operations::get_nodes,
@@ -81,6 +82,11 @@ fn add_node_items(menu: SystemTrayMenu, node: &str, is_running: bool) -> SystemT
     } else {
         CustomMenuItem::new(format!("stop_{}", node), "Stop").disabled()
     })
+    .add_item(if is_running {
+        CustomMenuItem::new(format!("dashboard_{}", node), "Dashboard")
+    } else {
+        CustomMenuItem::new(format!("dashboard_{}", node), "Dashboard").disabled()
+    })
     .add_item(CustomMenuItem::new(format!("config_{}", node), "Configure"))
     .add_item(CustomMenuItem::new(format!("logs_{}", node), "Logs"))
     .add_item(CustomMenuItem::new(format!("delete_{}", node), "Delete"))
@@ -111,6 +117,9 @@ pub fn handle_tray_action(app_handle: &AppHandle, action: &str, node: &str) -> R
         "start" | "stop" => emit_trigger_action(&window, node, "controls", action)?,
         "config" | "logs" | "delete" => emit_trigger_action(&window, node, action, "")?,
         "show" => emit_trigger_action(&window, node, "", "show")?,
+        "dashboard" => {
+            open_admin_dashboard(app_handle.clone(), node.to_string())?;
+        }
         _ => {}
     }
 

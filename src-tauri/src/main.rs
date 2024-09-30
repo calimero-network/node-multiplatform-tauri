@@ -47,6 +47,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             commands::node_commands::stop_node,
             commands::node_commands::send_input,
             commands::node_commands::get_node_log,
+            commands::node_commands::delete_node,
+            commands::node_commands::open_dashboard,
         ])
         .run(tauri::generate_context!())?;
 
