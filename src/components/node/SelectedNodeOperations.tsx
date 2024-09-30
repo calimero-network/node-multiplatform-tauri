@@ -6,18 +6,29 @@ import { OperationsContainer, NodeTitle, NodeActions, MainContent } from '../../
 import NodeControls from './NodeControls';
 import NodeLogs from './NodeLogs';
 import { TrayAction } from '../../pages/Dashboard';
+import DeleteNode from './DeleteNode';
+import MessagePopup from '../common/MessagePopup';
 
 interface SelectedNodeOperationsProps {
   selectedNode: NodeDetails;
   handleNodeConfigUpdate: ( config: UpdateNodeConfigParams ) => Promise<CommandResponse>;
   handleNodeStart: (nodeName: string) => Promise<CommandResponse>;
   handleNodeStop: (nodeName: string) => Promise<CommandResponse>;
+  handleNodeDelete: (nodeName: string) => Promise<CommandResponse>;
+  handleNodeSelect: (nodeName: string) => void;
+  handleOpenAdminDashboard: (nodeName: string) => Promise<CommandResponse>;
   trayAction: TrayAction | null;
 }
 
-const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selectedNode, handleNodeConfigUpdate, handleNodeStart, handleNodeStop, trayAction }) => {
-  const [activeSection, setActiveSection] = useState<'config' | 'controls' | 'logs' | null>('controls');
+const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selectedNode, handleNodeConfigUpdate, handleNodeStart, handleNodeStop, handleNodeDelete, handleNodeSelect, handleOpenAdminDashboard, trayAction }) => {
+  const [activeSection, setActiveSection] = useState<'config' | 'controls' | 'logs' | 'delete' | null>('controls');
   const [action, setAction] = useState< string | null>(null);
+  const [messagePopup, setMessagePopup] = useState({
+    isOpen: false,
+    message: '',
+    title: '',
+    type: 'info' as const
+  });
 
   useEffect(() => {
     if(trayAction) {
@@ -25,6 +36,19 @@ const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selecte
       setAction(trayAction.action);
     }
   }, [trayAction]);
+
+  const openAdminDashboard = async () => {
+    if(selectedNode.is_running) {
+      handleOpenAdminDashboard(selectedNode.name);
+    } else {
+      setMessagePopup({
+        isOpen: true,
+        message: "Node is not running.",
+        title: "Node Status",
+        type: "info"
+      });
+    }
+  };
 
   return (
     <OperationsContainer>
@@ -38,6 +62,12 @@ const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selecte
         </Button>
         <Button onClick={() => setActiveSection('logs')} variant='logs'>
           Node Logs
+        </Button>
+        <Button onClick={() => setActiveSection('delete')} variant='delete'>
+          Delete Node
+        </Button>
+        <Button onClick={() => openAdminDashboard()} variant='start'>
+          Open Admin Dashboard
         </Button>
       </NodeActions>
       <MainContent>
@@ -57,6 +87,13 @@ const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selecte
             setAction={setAction}
           />
         )}
+        {activeSection === 'delete' && (
+          <DeleteNode
+            handleDeleteNode={() => handleNodeDelete(selectedNode.name)}
+            onCancel={() => setActiveSection(null)}
+            onDeleteSuccess={() => handleNodeSelect("")}
+          />
+        )}
         {activeSection === 'logs' && (
           <NodeLogs
             selectedNode={selectedNode}
@@ -64,6 +101,13 @@ const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({ selecte
           />
         )}
       </MainContent>
+      <MessagePopup
+        isOpen={messagePopup.isOpen}
+        onClose={() => setMessagePopup(prev => ({ ...prev, isOpen: false }))}
+        message={messagePopup.message}
+        title={messagePopup.title}
+        type={messagePopup.type}
+      />
     </OperationsContainer>
   );
 };

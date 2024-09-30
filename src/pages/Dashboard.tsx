@@ -24,15 +24,19 @@ const Dashboard: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [trayAction, setTrayAction] = useState<TrayAction | null>(null);
   const {
-    nodes,
+    nodesRef,
     selectedNode,
     handleNodeSelect,
     handleNodeInitialize,
     handleNodeConfigUpdate,
     handleNodeStart,
     handleNodeStop,
+    handleNodeDelete,
+    handleOpenAdminDashboard
   } = useNodeManagement();
 
+  const nodes = nodesRef.current;
+  
   useEffect(() => {
     const listeners: (() => void)[] = [];
 
@@ -82,9 +86,12 @@ const Dashboard: React.FC = () => {
             selectedNode && 
               <SelectedNodeOperations
                 selectedNode={selectedNode}
+                handleNodeSelect={handleNodeSelect}
                 handleNodeConfigUpdate={handleNodeConfigUpdate}
                 handleNodeStart={handleNodeStart}
                 handleNodeStop={handleNodeStop}
+                handleNodeDelete={handleNodeDelete}
+                handleOpenAdminDashboard={handleOpenAdminDashboard}
                 trayAction={trayAction}
               />
           }   

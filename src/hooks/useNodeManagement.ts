@@ -44,6 +44,7 @@ const useNodeManagement = () => {
       const nodesStatus = await invoke<NodeDetails[]>('fetch_nodes');
       setNodes(nodesStatus);
       nodesRef.current = nodesStatus;
+      setSelectedNode(nodesStatus.find(node => node.name === selectedNode?.name) || null);
     } catch (error) {
       console.error('Error fetching nodes status:', error);
     }
@@ -114,8 +115,33 @@ const useNodeManagement = () => {
     }
   };
 
+  const handleNodeDelete = async (nodeName: string): Promise<CommandResponse> => {
+    console.log('Deleting node:', nodeName);
+    try {
+      const result = await invoke<{ success: boolean; message: string }>('delete_node', { nodeName });
+      console.log('Delete node result:', result);
+      if (result.success) {
+        await refreshNodesList();
+      }
+      return result;
+    } catch (error) {
+      console.error('Error deleting node:', error);
+      return { success: false, message: `Error: ${error}` };
+    }
+  };
+
+  const handleOpenAdminDashboard = async (nodeName: string): Promise<CommandResponse> => {
+    try {
+      const result = await invoke<CommandResponse>('open_dashboard', { nodeName });
+      return result;
+    } catch (error) {
+      console.error('Error opening admin dashboard:', error);
+      return { success: false, message: `Error: ${error}` };
+    }
+  };
+
   return {
-    nodes,
+    nodesRef,
     selectedNode,
     setSelectedNode,
     handleNodeSelect,
@@ -123,7 +149,9 @@ const useNodeManagement = () => {
     refreshNodesList,
     handleNodeConfigUpdate,
     handleNodeStart,
-    handleNodeStop
+    handleNodeStop,
+    handleNodeDelete,
+    handleOpenAdminDashboard
   };
 };
 
