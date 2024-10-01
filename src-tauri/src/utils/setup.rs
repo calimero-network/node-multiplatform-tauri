@@ -1,12 +1,39 @@
 use std::collections::HashMap;
 use std::{env, fs};
 use std::sync::{Arc, Mutex};
-use auto_launch::AutoLaunchBuilder;
+use auto_launch::AutoLaunch;
 use tauri::{App, AppHandle, Manager, State, Wry};
 use tauri_plugin_store::{Store, StoreBuilder};
 use crate::error::errors::AppError;
 use crate::operations::node_operations::start_nodes_on_startup;
-use crate::types::types::{AppState, NodeManager, Result as Res};
+use crate::types::types::{AppState, NodeManager};
+use lazy_static::lazy_static;
+
+
+lazy_static! {
+    static ref AUTO_LAUNCH: Mutex<Option<AutoLaunch>> = Mutex::new(None);
+}
+
+fn get_auto_launch(app: &AppHandle) -> Result<AutoLaunch, Box<dyn std::error::Error>> {
+    let mut auto_launch = AUTO_LAUNCH.lock().map_err(|e| AppError::Custom(format!("Failed to lock AutoLaunch: {}", e)))?;
+    
+    if auto_launch.is_none() {
+        let app_name = app.package_info().name.clone();
+        let exec_path = env::current_exe().map_err(|e| AppError::IoError(e.to_string()))?;
+        let app_path = exec_path.to_str().ok_or("Failed to convert executable path to string")?;
+
+        *auto_launch = Some(
+            AutoLaunch::new(
+                &app_name,
+                app_path,
+                true,
+                &[] as &[&str],
+            )
+        );
+    }
+
+    Ok(auto_launch.as_ref().unwrap().clone())
+}
 
 pub fn setup_store(app: &App) -> Result<Store<Wry>, Box<dyn std::error::Error>> {
     let store_path = app
@@ -53,40 +80,11 @@ pub fn run_nodes_on_startup(state: &State<'_, AppState>) -> Result<(), Box<dyn s
 }
 
 pub fn setup_auto_launch(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
-  let app_name = app.package_info().name.clone();
-  let exec_path = env::current_exe().map_err(|e| AppError::IoError(e.to_string()))?;
-  let app_path = exec_path.to_str().ok_or_else(|| {
-      AppError::Custom("Failed to convert executable path to string".to_string())
-  })?;
-
-  let auto_launch = AutoLaunchBuilder::new()
-      .set_app_name(&app_name)
-      .set_app_path(app_path)
-      .set_use_launch_agent(true)
-      .set_args(&["--hidden"])
-      .build()
-      .map_err(|e| AppError::Custom(format!("Failed to build AutoLaunch: {}", e)))?;
-
-  auto_launch
-      .enable()
-      .map_err(|e| AppError::Custom(format!("Failed to enable AutoLaunch: {}", e)))?;
-
-  Ok(())
+    get_auto_launch(app)?.enable()?;
+    Ok(())
 }
 
-// Add this function to disable auto-launch
-pub fn disable_auto_launch(app_handle: &AppHandle) -> Res<()> {
-  let app_name = app_handle.package_info().name.clone();
-  let exec_path = env::current_exe().map_err(|e| AppError::IoError(e.to_string()))?;
-  let app_path = exec_path.to_str().ok_or_else(|| {
-      AppError::Custom("Failed to convert executable path to string".to_string())
-  })?;
-  let auto_launch = AutoLaunchBuilder::new()
-      .set_app_name(&app_name)
-      .set_app_path(app_path)
-      .set_use_launch_agent(true)
-      .build()
-      .map_err(|e| AppError::Custom(format!("Failed to build AutoLaunch: {}", e)))?;
-  auto_launch.disable().map_err(|e| AppError::Custom(format!("Failed to disable AutoLaunch: {}", e)))?;
-  Ok(())
+pub fn disable_auto_launch(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
+    get_auto_launch(app)?.disable()?;
+    Ok(())
 }
