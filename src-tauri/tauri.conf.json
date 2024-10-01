@@ -6,7 +6,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "node-multiplatform-tauri",
+    "productName": "Calimero Node Manager",
     "version": "0.1.0"
   },
   "tauri": {
