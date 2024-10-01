@@ -30,7 +30,6 @@ const NodeConfig: React.FC<NodeConfigProps> = ({ selectedNode, onConfigUpdate })
     setNodeName(selectedNode.name);
     setRunOnStartup(selectedNode.run_on_startup);
     setError(null);
-    setSuccessMessage(null);
   }, [selectedNode]);
 
   const handleUpdateConfig = async () => {
@@ -44,9 +43,8 @@ const NodeConfig: React.FC<NodeConfigProps> = ({ selectedNode, onConfigUpdate })
         swarmPort: swarmPort,
         runOnStartup: runOnStartup,
       });
-      
       if (result.success) {
-        setSuccessMessage("Node configuration updated successfully");
+        setSuccessMessage("Node configuration updated successfully!");
         setTimeout(() => {
           setSuccessMessage(null);
         }, 2000);
