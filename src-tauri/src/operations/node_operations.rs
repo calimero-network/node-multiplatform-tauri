@@ -55,21 +55,22 @@ pub async fn create_node(
 
 pub fn get_nodes(app_handle: AppHandle) -> Result<Vec<NodeInfo>> {
     let nodes_dir = get_nodes_dir(&app_handle);
-    Ok(fs::read_dir(nodes_dir)?
-        .filter_map(|entry| {
-            let entry = entry.ok()?;
-            let node_name = entry.file_name().to_str()?.to_owned();
+    let mut nodes = Vec::new();
 
-            get_node_ports(&node_name, &app_handle)
-                .map(|config| {
-                    let is_running = is_node_process_running(&node_name);
-                    NodeInfo {
-                        name: node_name,
-                        is_running,
-                        node_ports: config,
-                    }
-                })
-                .ok()
-        })
-        .collect())
+    for entry in fs::read_dir(nodes_dir)? {
+        let entry = entry?;
+        if let Some(node_name) = entry.file_name().to_str() {
+            let node_name = node_name.to_owned();
+            if let Ok(config) = get_node_ports(&node_name, &app_handle) {
+                let is_running = is_node_process_running(&node_name)?;
+                nodes.push(NodeInfo {
+                    name: node_name,
+                    is_running,
+                    node_ports: config,
+                });
+            }
+        }
+    }
+
+    Ok(nodes)
 }

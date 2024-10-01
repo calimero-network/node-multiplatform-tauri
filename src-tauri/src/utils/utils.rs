@@ -1,9 +1,10 @@
 use lazy_static::lazy_static;
 use serde_json::Value;
 use std::path::PathBuf;
-use std::process::Command;
-use std::{env, fs};
+use sysinfo::{System, ProcessRefreshKind, RefreshKind};
 use tauri::regex::Regex;
+
+use std::{env, fs};
 use tauri::AppHandle;
 
 use crate::error::errors::AppError;
@@ -49,13 +50,21 @@ pub fn get_binary_path(app_handle: &AppHandle) -> PathBuf {
     }
 }
 
-pub fn is_node_process_running(node_name: &str) -> bool {
-    let output = Command::new("pgrep")
-        .args(&["-f", &format!("meroctl.*--node-name {}.*run", node_name)])
-        .output()
-        .expect("Failed to execute command");
+pub fn is_node_process_running(node_name: &str) -> Result<bool> {
+    let system = System::new_with_specifics(RefreshKind::new().with_processes(ProcessRefreshKind::everything()));
+      
+    let pattern = format!(r"meroctl.*--node-name\s+{}.*run", regex_escape(node_name));
+    let re = Regex::new(&pattern).map_err(|e| AppError::Custom(format!("Failed to create regex: {}", e)))?;
 
-    output.status.success()
+    Ok(system.processes().values().any(|process| {
+        let cmd = process.cmd()
+            .iter()
+            .filter_map(|arg| arg.to_str())
+            .collect::<Vec<&str>>()
+            .join(" ");
+        
+        re.is_match(&cmd)
+    }))
 }
 
 pub fn get_node_ports(node_name: &str, app_handle: &AppHandle) -> Result<NodeConfig> {
@@ -87,4 +96,19 @@ fn extract_port(config: &Value, key: &str) -> Result<u32> {
         .and_then(|v| v.split('/').nth(4))
         .and_then(|v| v.parse().ok())
         .ok_or_else(|| AppError::Custom(format!("Failed to extract {} port", key)))
+}
+
+// Helper function to escape special regex characters
+fn regex_escape(s: &str) -> String {
+    let mut result = String::with_capacity(s.len() * 2);
+    for c in s.chars() {
+        match c {
+            '.' | '+' | '*' | '?' | '^' | '$' | '(' | ')' | '[' | ']' | '{' | '}' | '|' | '\\' => {
+                result.push('\\');
+                result.push(c);
+            },
+            _ => result.push(c),
+        }
+    }
+    result
 }
