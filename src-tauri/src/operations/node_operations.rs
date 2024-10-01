@@ -502,3 +502,46 @@ pub fn open_admin_dashboard(app_handle: AppHandle, node_name: String) -> Result<
         message: format!("Opened admin dashboard for node {}", node_name),
     })
 }
+
+pub async fn start_nodes_on_startup(state: State<'_, AppState>) -> Result<()> {
+  let keys: Vec<String> = {
+      let store = state.store.lock().map_err(|e| AppError::Custom(format!("Failed to lock store: {}", e)))?;
+      store.keys().map(|k| k.to_string()).collect()
+  };
+  for key in keys {
+      if key.ends_with("_run_on_startup") {
+          let value = {
+              let store = state.store.lock().map_err(|e| AppError::Custom(format!("Failed to lock store: {}", e)))?;
+              match store.get(&key) {
+                  Some(value) => value.clone(),
+                  None => return Err(AppError::Store("Key not found".to_string())),
+              }
+          };
+          if let Value::Bool(true) = value {
+              let node_name = key.trim_end_matches("_run_on_startup");
+              let is_node_running = is_node_process_running(node_name);
+              if is_node_running {
+                  stop_node_process(state.clone(), node_name.to_string()).await?;
+              }
+              start_node(state.clone(), node_name.to_string()).await?;
+          }
+      }
+  }
+  Ok(())
+}
+
+pub async fn stop_all_nodes(state: State<'_, AppState>) -> Result<()> {
+  let node_names: Vec<String> = {
+      let manager = state.node_manager.lock().map_err(|e| AppError::Custom(format!("Failed to lock store: {}", e)))?;
+      manager.nodes.keys().cloned().collect()
+  };
+
+  for node_name in node_names {
+      match stop_node_process(state.clone(), node_name.clone()).await {
+          Ok(_) => println!("Successfully stopped node: {}", node_name),
+          Err(e) => eprintln!("Failed to stop node {}: {:?}", node_name, e),
+      }
+  }
+
+  Ok(())
+}

@@ -1,5 +1,5 @@
 use crate::error::errors::AppError;
-use crate::operations::node_operations::open_admin_dashboard;
+use crate::operations::node_operations::{open_admin_dashboard, stop_all_nodes};
 use crate::types::types::NodeInfo;
 use crate::{
     operations::node_operations::get_nodes,
@@ -92,12 +92,13 @@ fn add_node_items(menu: SystemTrayMenu, node: &str, is_running: bool) -> SystemT
     .add_item(CustomMenuItem::new(format!("delete_{}", node), "Delete"))
 }
 
-pub fn handle_tray_click(app_handle: &AppHandle, menu_id: &str) -> Result<()> {
+pub async fn handle_tray_click(app_handle: &AppHandle, menu_id: &str) -> Result<()> {
     let parts: Vec<&str> = menu_id.split('_').collect();
     match parts.as_slice() {
         ["show", "window"] => show_main_window(app_handle),
         [action, node] => handle_tray_action(app_handle, action, node),
         ["quit"] => {
+            stop_all_nodes(app_handle.state::<AppState>().clone()).await?;
             app_handle.exit(0);
             Ok(())
         }

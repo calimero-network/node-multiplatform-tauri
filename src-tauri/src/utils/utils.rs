@@ -56,8 +56,7 @@ pub fn is_node_process_running(node_name: &str) -> bool {
         .args(&["-f", &format!("meroctl.*--node-name {}.*run", node_name)])
         .output()
         .expect("Failed to execute command");
-
-    output.status.success()
+    !output.stdout.is_empty()
 }
 
 pub fn get_node_ports(node_name: &str, app_handle: &AppHandle) -> Result<NodeConfig> {

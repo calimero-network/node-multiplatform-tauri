@@ -2,8 +2,9 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use tauri::{Manager, SystemTray, SystemTrayEvent, SystemTrayMenu};
-use tray::tray::{handle_tray_click, update_tray_menu};
-use utils::setup::{setup_app_state, setup_store};
+use tray::{menu::{create_menu, handle_menu_click}, tray::{handle_tray_click, update_tray_menu}};
+use types::types::AppState;
+use utils::setup::{run_nodes_on_startup, setup_app_state, setup_auto_launch, setup_store};
 
 mod commands;
 mod error;
@@ -16,24 +17,56 @@ mod utils;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let system_tray = SystemTray::new().with_menu(SystemTrayMenu::new());
+    // Create a default menu first
+    let menu = create_menu();
+
     tauri::Builder::default()
+        .menu(menu)
         .setup(|app| {
             let app_handle = app.handle();
             // Initialize store
             let store = setup_store(app)?;
+            
+            // Get the run_app_on_startup value from the store
+            let run_app_on_startup = store.get("run_app_on_startup")
+                .and_then(|value| value.as_bool())
+                .unwrap_or(false);
+            
+            // Update the menu item state if necessary
+            if run_app_on_startup {
+                app.windows().values().for_each(|window| {
+                    let _ = window.menu_handle().get_item("run_on_startup").set_selected(true);
+                });
+                setup_auto_launch(app)?
+            }
+
             // Initialize app state
             let app_state = setup_app_state(app_handle, store)?;
             app.manage(app_state);
 
+            // Get a reference to the managed state
+            let state = app.state::<AppState>();
+
+            //Start nodes that have automatic start option selected
+            run_nodes_on_startup(&state)?;
+
             update_tray_menu(app.state())?;
             Ok(())
+        })
+        .on_menu_event(|event| {
+            handle_menu_click(&event);
         })
         .system_tray(system_tray)
         .on_system_tray_event(|app, event| {
             let app_handle = app.app_handle();
             match event {
                 SystemTrayEvent::MenuItemClick { id, .. } => {
-                    let _ = handle_tray_click(&app_handle, &id);
+                    let app_handle_clone = app_handle.clone();
+                    tauri::async_runtime::spawn(async move {
+                        if let Err(e) = handle_tray_click(&app_handle_clone, &id).await {
+                            eprintln!("Error handling tray click: {:?}", e);
+                        }
+                    });
                 }
                 _ => {}
             }
