@@ -30,14 +30,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             // Get the run_app_on_startup value from the store
             let run_app_on_startup = store.get("run_app_on_startup")
                 .and_then(|value| value.as_bool())
-                .unwrap_or(false);
+                .unwrap_or(true);
             
             // Update the menu item state if necessary
             if run_app_on_startup {
                 app.windows().values().for_each(|window| {
                     let _ = window.menu_handle().get_item("run_on_startup").set_selected(true);
                 });
-                setup_auto_launch(app)?
+                setup_auto_launch(&app_handle)?
             }
 
             // Initialize app state

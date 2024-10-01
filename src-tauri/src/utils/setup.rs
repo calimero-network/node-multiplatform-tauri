@@ -4,7 +4,6 @@ use std::sync::{Arc, Mutex};
 use auto_launch::AutoLaunchBuilder;
 use tauri::{App, AppHandle, Manager, State, Wry};
 use tauri_plugin_store::{Store, StoreBuilder};
-
 use crate::error::errors::AppError;
 use crate::operations::node_operations::start_nodes_on_startup;
 use crate::types::types::{AppState, NodeManager, Result as Res};
@@ -53,7 +52,7 @@ pub fn run_nodes_on_startup(state: &State<'_, AppState>) -> Result<(), Box<dyn s
    Ok(())
 }
 
-pub fn setup_auto_launch(app: &tauri::App) -> Res<()> {
+pub fn setup_auto_launch(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
   let app_name = app.package_info().name.clone();
   let exec_path = env::current_exe().map_err(|e| AppError::IoError(e.to_string()))?;
   let app_path = exec_path.to_str().ok_or_else(|| {
@@ -72,5 +71,22 @@ pub fn setup_auto_launch(app: &tauri::App) -> Res<()> {
       .enable()
       .map_err(|e| AppError::Custom(format!("Failed to enable AutoLaunch: {}", e)))?;
 
+  Ok(())
+}
+
+// Add this function to disable auto-launch
+pub fn disable_auto_launch(app_handle: &AppHandle) -> Res<()> {
+  let app_name = app_handle.package_info().name.clone();
+  let exec_path = env::current_exe().map_err(|e| AppError::IoError(e.to_string()))?;
+  let app_path = exec_path.to_str().ok_or_else(|| {
+      AppError::Custom("Failed to convert executable path to string".to_string())
+  })?;
+  let auto_launch = AutoLaunchBuilder::new()
+      .set_app_name(&app_name)
+      .set_app_path(app_path)
+      .set_use_launch_agent(true)
+      .build()
+      .map_err(|e| AppError::Custom(format!("Failed to build AutoLaunch: {}", e)))?;
+  auto_launch.disable().map_err(|e| AppError::Custom(format!("Failed to disable AutoLaunch: {}", e)))?;
   Ok(())
 }

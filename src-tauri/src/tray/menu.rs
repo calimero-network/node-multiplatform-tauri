@@ -1,6 +1,6 @@
 use tauri::{CustomMenuItem, Menu, MenuItem, Submenu, WindowMenuEvent, Manager};
 
-use crate::{operations::node_operations::stop_all_nodes, types::types::AppState};
+use crate::{error::errors::AppError, operations::node_operations::stop_all_nodes, types::types::AppState, utils::setup::{disable_auto_launch, setup_auto_launch}};
 
 pub fn create_menu() -> Menu {
   // Create the "Run on Startup" menu item with initial state
@@ -32,7 +32,11 @@ pub fn handle_menu_click(event: &WindowMenuEvent) {
                 .and_then(|value| value.as_bool())
                 .unwrap_or(false);
             let new_value = !current_value;
-            
+            if new_value {
+                let _ = setup_auto_launch(&app_handle).map_err(|e| AppError::Custom(format!("Failed to setup auto launch: {}", e)));
+            } else {
+                let _ = disable_auto_launch(&app_handle).map_err(|e| AppError::Custom(format!("Failed to disable auto launch: {}", e)));
+            }
             // Update the store
             store.insert("run_app_on_startup".to_string(), new_value.into()).unwrap();
             store.save().unwrap();
