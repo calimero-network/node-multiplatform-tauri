@@ -7,13 +7,16 @@ use tauri_plugin_store::{Store, StoreBuilder};
 use crate::types::types::{AppState, NodeManager};
 
 pub fn setup_store(app: &App) -> Result<Store<Wry>, Box<dyn std::error::Error>> {
-    
-    let store_path = app
+    let app_data_dir = app
         .path_resolver()
         .app_data_dir()
-        .ok_or("Failed to get app data dir")?
-        .join("node_manager.dat");
+        .ok_or("Failed to get app data dir")?;
 
+    if !app_data_dir.exists() {
+        fs::create_dir_all(&app_data_dir)?;
+    }
+
+    let store_path = app_data_dir.join("node_manager.dat");
     if !store_path.exists() {
         fs::write(&store_path, "{}")?;
     }
