@@ -1,36 +1,36 @@
+use crate::types::types::{AppState, NodeManager};
+use eyre::{eyre, Result};
 use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
 use std::fs;
+use std::sync::{Arc, Mutex};
 use tauri::{App, AppHandle, Wry};
 use tauri_plugin_store::{Store, StoreBuilder};
 
-use crate::types::types::{AppState, NodeManager};
-
-pub fn setup_store(app: &App) -> Result<Store<Wry>, Box<dyn std::error::Error>> {
+pub fn setup_store(app: &App) -> Result<Store<Wry>> {
     let app_data_dir = app
         .path_resolver()
         .app_data_dir()
-        .ok_or("Failed to get app data dir")?;
+        .ok_or_else(|| eyre!("Failed to get app data dir"))?;
 
     if !app_data_dir.exists() {
-        fs::create_dir_all(&app_data_dir)?;
+        fs::create_dir_all(&app_data_dir)
+            .map_err(|e| eyre!("Failed to create app data directory: {}", e))?;
     }
 
     let store_path = app_data_dir.join("node_manager.dat");
     if !store_path.exists() {
-        fs::write(&store_path, "{}")?;
+        fs::write(&store_path, "{}").map_err(|e| eyre!("Failed to create store file: {}", e))?;
     }
 
     let mut store: Store<Wry> = StoreBuilder::new(app.handle(), store_path).build();
-    store.load()?;
+    store
+        .load()
+        .map_err(|e| eyre!("Failed to load store: {}", e))?;
 
     Ok(store)
 }
 
-pub fn setup_app_state(
-    app_handle: AppHandle,
-    store: Store<Wry>,
-) -> Result<AppState, Box<dyn std::error::Error>> {
+pub fn setup_app_state(app_handle: AppHandle, store: Store<Wry>) -> Result<AppState> {
     let node_manager = Arc::new(Mutex::new(NodeManager {
         nodes: HashMap::new(),
     }));
