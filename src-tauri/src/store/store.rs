@@ -1,9 +1,6 @@
+use crate::types::types::AppState;
+use eyre::{eyre, Result};
 use tauri::State;
-
-use crate::{
-    error::errors::AppError,
-    types::types::{AppState, Result},
-};
 
 pub fn update_run_node_on_startup(
     state: &State<'_, AppState>,
@@ -17,10 +14,12 @@ pub fn update_run_node_on_startup(
                 format!("{}_run_on_startup", node_name),
                 serde_json::json!(run_on_startup),
             )
-            .map_err(|e| AppError::Store(e.to_string()))?;
-        store.save().map_err(|e| AppError::Store(e.to_string()))?;
+            .map_err(|e| eyre!("Failed to insert into store: {}", e))?;
+        store
+            .save()
+            .map_err(|e| eyre!("Failed to save store: {}", e))?;
         Ok(())
     } else {
-        return Err(AppError::Custom("Failed to acquire store lock".into()));
+        Err(eyre!("Failed to acquire store lock"))
     }
 }

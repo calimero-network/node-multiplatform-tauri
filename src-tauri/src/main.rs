@@ -1,15 +1,9 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use node_multiplatform_tauri::commands;
+use node_multiplatform_tauri::utils::{setup_app_state, setup_store};
 use tauri::Manager;
-use utils::setup::{setup_app_state, setup_store};
-
-mod commands;
-mod error;
-mod operations;
-mod store;
-mod types;
-mod utils;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     tauri::Builder::default()
