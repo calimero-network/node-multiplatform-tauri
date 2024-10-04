@@ -1,8 +1,10 @@
 import React from 'react';
 import { StyledButton } from './Styled';
 
+type ButtonVariant = 'start' | 'stop' | 'configure' | 'delete' | 'logs' | 'controls';
+
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'start' | 'stop' | 'configure' | 'delete' | 'logs' | 'controls';
+  variant?: ButtonVariant;
 }
 
 const Button: React.FC<ButtonProps> = ({

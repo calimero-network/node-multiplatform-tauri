@@ -50,7 +50,7 @@ const useNodeManagement = () => {
     runOnStartup: boolean
   ): Promise<NodeInitializationResult> => {
     try {
-      const result = await invoke<{ success: boolean; message: string }>(
+      const result = await invoke<NodeInitializationResult>(
         'initialize_node',
         {
           nodeName,
