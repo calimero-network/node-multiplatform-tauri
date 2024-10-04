@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { PopupOverlay, PopupContent } from '../../styles/PopupStyles';
+import { PopupOverlay, PopupContent } from './Styled';
 
 interface PopupWrapperProps {
   isOpen: boolean;

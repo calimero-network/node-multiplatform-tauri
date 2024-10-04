@@ -13,18 +13,25 @@ interface NodeStatus {
 export interface NodeInitializationResult {
   success: boolean;
   message: string;
+  data: NodeStatus[] | null;
 }
 
 const useNodeManagement = () => {
-  const [nodes, setNodes] = useState<NodeStatus[]>([]);
+  const [nodes, setNodes] = useState<NodeStatus[] | null>(null);
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
 
   const refreshNodesList = async () => {
     try {
-      const nodesStatus = await invoke<NodeStatus[]>('fetch_nodes');
-      setNodes(nodesStatus);
+      const nodesStatus = await invoke<NodeInitializationResult>('fetch_nodes');
+      if (nodesStatus.success) {
+        setNodes(nodesStatus.data);
+      } else {
+        console.error('Error fetching nodes status:', nodesStatus.message);
+        alert(nodesStatus.message);
+      }
     } catch (error) {
       console.error('Error fetching nodes status:', error);
+      alert(error);
     }
   };
 
@@ -47,10 +54,18 @@ const useNodeManagement = () => {
       if (result.success) {
         await refreshNodesList(); // Refresh the node list and status 
       }
-      return result;
+      return {
+        success: result.success,
+        message: result.message,
+        data: null,
+      };
     } catch (error: any) {
       console.error('Failed to initialize node:', error);
-      return error;
+      return {
+        success: false,
+        message: error.message,
+        data: null,
+      };
     }
   };
 

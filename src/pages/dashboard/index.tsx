@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import NodeList from '../components/node/NodeList';
-import useNodeManagement from '../hooks/useNodeManagement';
-import Button from '../components/common/Button';
-import Header from '../components/layout/Header';
-import PopupWrapper from '../components/common/PopupWrapper';
-import NodeInitializationPopup from '../components/node/NodeInitializationPopup';
-import { DashboardContainer, MainContent, Sidebar, ContentArea } from '../styles/DashboardStyles';
+import NodeList from '../../components/nodeList';
+import useNodeManagement from '../../hooks/useNodeManagement';
+import Button from '../../components/common/button';
+import Header from '../../components/layout/header';
+import PopupWrapper from '../../components/common/popup';
+import NodeInitializationPopup from '../../components/nodeInitPopup/NodeInitializationPopup';
+import { DashboardContainer, MainContent, Sidebar, ContentArea } from './Styled';
 
 const Dashboard: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);

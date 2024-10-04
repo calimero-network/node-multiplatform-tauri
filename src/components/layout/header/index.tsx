@@ -6,8 +6,8 @@ import {
   DashboardText,
   HeaderTitle,
   Placeholder
-} from '../../styles/HeaderStyles';
-import calimeroLogo from '../../assets/calimero-logo.svg';
+} from './Styled';
+import calimeroLogo from '../../../assets/calimero-logo.svg';
 
 const Header: React.FC = () => (
   <HeaderStyled>

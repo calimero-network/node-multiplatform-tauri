@@ -1,5 +1,5 @@
 import React from 'react';
-import { InputGroup, Label, StyledInput, ErrorMessage } from '../../styles/InputStyles';
+import { InputGroup, Label, StyledInput, ErrorMessage } from './Styled';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;

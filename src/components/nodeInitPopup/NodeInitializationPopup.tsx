@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import Button from '../common/Button';
-import Input from '../common/Input';
-import Checkbox from '../common/Checkbox';
-import { PopupButtons, SuccessMessage, ErrorMessage } from '../../styles/PopupStyles';
+import Button from '../common/button';
+import Input from '../common/input';
+import Checkbox from '../common/checkbox';
+import { PopupButtons, SuccessMessage, ErrorMessage } from '../common/popup/Styled';
 import { NodeInitializationResult } from '../../hooks/useNodeManagement';
 
 interface NodeInitializationPopupProps {

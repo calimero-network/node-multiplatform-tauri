@@ -6,7 +6,7 @@ import {
   NodeListItem,
   Notice,
   StatusIcon
-} from '../../styles/NodeListStyles';
+} from './Styled';
 
 interface NodeStatus {
   name: string;
@@ -18,7 +18,7 @@ interface NodeStatus {
 }
 
 interface NodeListProps {
-  nodes: NodeStatus[];
+  nodes: NodeStatus[] | null;
   selectedNode: string | null;
   onNodeSelect: (nodeName: string) => void;
 }
@@ -27,7 +27,7 @@ const NodeList: React.FC<NodeListProps> = ({ nodes, selectedNode, onNodeSelect }
   return (
     <NodeListContainer>
       <NodeListTitle>Nodes</NodeListTitle>
-      {nodes.length > 0 ? (
+      {nodes && nodes.length > 0 ? (
         <>
           <Notice>Select a node:</Notice>
           <NodeListUl>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { CheckboxGroup, Label, StyledCheckbox, ErrorMessage } from '../../styles/CheckboxStyles';
+import { CheckboxGroup, Label, StyledCheckbox, ErrorMessage } from './Styled';
 
 interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
