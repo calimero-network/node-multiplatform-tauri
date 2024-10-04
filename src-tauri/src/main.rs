@@ -2,10 +2,10 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use node_multiplatform_tauri::commands;
-use node_multiplatform_tauri::utils::{setup_app_state, setup_store};
+use node_multiplatform_tauri::utils::setup::{setup_app_state, setup_store};
 use tauri::Manager;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> eyre::Result<()> {
     tauri::Builder::default()
         .setup(|app| {
             let app_handle = app.handle();
@@ -17,8 +17,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            commands::node_commands::initialize_node,
-            commands::node_commands::fetch_nodes,
+            commands::initialize_node,
+            commands::fetch_nodes,
         ])
         .run(tauri::generate_context!())?;
 

@@ -1,4 +1,4 @@
-use crate::types::types::{AppState, NodeManager};
+use crate::types::{AppState, NodeManager};
 use eyre::{eyre, Result};
 use std::collections::HashMap;
 use std::fs;
