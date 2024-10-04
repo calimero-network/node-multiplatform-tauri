@@ -2,11 +2,20 @@ import React, { useState } from 'react';
 import Button from '../common/button';
 import Input from '../common/input';
 import Checkbox from '../common/checkbox';
-import { PopupButtons, SuccessMessage, ErrorMessage } from '../common/popup/Styled';
+import {
+  PopupButtons,
+  SuccessMessage,
+  ErrorMessage,
+} from '../common/popup/Styled';
 import { NodeInitializationResult } from '../../hooks/useNodeManagement';
 
 interface NodeInitializationPopupProps {
-  onInitialize: (nodeName: string, serverPort: number, swarmPort: number, runOnStartup: boolean) => Promise<NodeInitializationResult>;
+  onInitialize: (
+    nodeName: string,
+    serverPort: number,
+    swarmPort: number,
+    runOnStartup: boolean
+  ) => Promise<NodeInitializationResult>;
   onClose: () => void;
 }
 
@@ -22,10 +31,15 @@ const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await onInitialize(nodeName, parseInt(serverPort), parseInt(swarmPort), runOnStartup);
+    const response = await onInitialize(
+      nodeName,
+      parseInt(serverPort),
+      parseInt(swarmPort),
+      runOnStartup
+    );
     if (response.success) {
       setMessage(response.message);
-    }else {
+    } else {
       setMessage('Error: ' + response.message);
     }
   };
@@ -64,15 +78,20 @@ const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({
           onChange={(e) => setRunOnStartup(e.target.checked)}
         />
         <PopupButtons>
-          <Button type="button" variant="stop" onClick={onClose}>Cancel</Button>
-          <Button type="submit" variant="start">Initialize Node</Button>
+          <Button type="button" variant="stop" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" variant="start">
+            Initialize Node
+          </Button>
         </PopupButtons>
       </form>
-      {message && (
-        message.startsWith('Error') 
-          ? <ErrorMessage>{message}</ErrorMessage>
-          : <SuccessMessage>{message}</SuccessMessage>
-      )}
+      {message &&
+        (message.startsWith('Error') ? (
+          <ErrorMessage>{message}</ErrorMessage>
+        ) : (
+          <SuccessMessage>{message}</SuccessMessage>
+        ))}
     </>
   );
 };

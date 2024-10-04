@@ -7,7 +7,7 @@ interface NodeStatus {
   node_ports: {
     server_port: number;
     swarm_port: number;
-  }
+  };
 }
 
 export interface NodeInitializationResult {
@@ -43,27 +43,35 @@ const useNodeManagement = () => {
     setSelectedNode(nodeName);
   };
 
-  const handleNodeInitialize = async (nodeName: string, serverPort: number, swarmPort: number, runOnStartup: boolean): Promise<NodeInitializationResult> => {
+  const handleNodeInitialize = async (
+    nodeName: string,
+    serverPort: number,
+    swarmPort: number,
+    runOnStartup: boolean
+  ): Promise<NodeInitializationResult> => {
     try {
-      const result = await invoke<{ success: boolean; message: string }>('initialize_node', {
-        nodeName,
-        serverPort,
-        swarmPort,
-        runOnStartup
-      });
+      const result = await invoke<{ success: boolean; message: string }>(
+        'initialize_node',
+        {
+          nodeName,
+          serverPort,
+          swarmPort,
+          runOnStartup,
+        }
+      );
       if (result.success) {
-        await refreshNodesList(); // Refresh the node list and status 
+        await refreshNodesList(); // Refresh the node list and status
       }
       return {
         success: result.success,
         message: result.message,
         data: null,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Failed to initialize node:', error);
       return {
         success: false,
-        message: error.message,
+        message: error instanceof Error ? error.message : 'Unknown error',
         data: null,
       };
     }

@@ -8,7 +8,7 @@ export const Label = styled.label`
   display: block;
   margin-bottom: 0.5rem;
   font-weight: 500;
-  color: #FFFFFF;
+  color: #ffffff;
 `;
 
 interface InputProps {
@@ -21,12 +21,14 @@ export const StyledInput = styled.input<InputProps>`
   padding: 0 12px;
   font-size: 14px;
   line-height: 40px;
-  color: #FFFFFF;
+  color: #ffffff;
   background-color: rgb(18, 18, 18);
   background-clip: padding-box;
   border: 1px solid #ced4da;
   border-radius: 4px;
-  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  transition:
+    border-color 0.15s ease-in-out,
+    box-shadow 0.15s ease-in-out;
   box-sizing: border-box;
   margin-bottom: 0.5rem;
 
@@ -49,13 +51,15 @@ export const StyledInput = styled.input<InputProps>`
     opacity: 1;
   }
 
-  ${props => props.error && css`
-    border-color: #e74c3c;
+  ${(props) =>
+    props.error &&
+    css`
+      border-color: #e74c3c;
 
-    &:focus {
-      box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25);
-    }
-  `}
+      &:focus {
+        box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25);
+      }
+    `}
 `;
 
 export const ErrorMessage = styled.span`

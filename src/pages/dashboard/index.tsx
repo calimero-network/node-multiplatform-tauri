@@ -5,37 +5,33 @@ import Button from '../../components/common/button';
 import Header from '../../components/layout/header';
 import PopupWrapper from '../../components/common/popup';
 import NodeInitializationPopup from '../../components/nodeInitPopup/NodeInitializationPopup';
-import { DashboardContainer, MainContent, Sidebar, ContentArea } from './Styled';
+import {
+  DashboardContainer,
+  MainContent,
+  Sidebar,
+  ContentArea,
+} from './Styled';
 
 const Dashboard: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);
-  const {
-    nodes,
-    selectedNode,
-    handleNodeSelect,
-    handleNodeInitialize,
-  } = useNodeManagement();
+  const { nodes, selectedNode, handleNodeSelect, handleNodeInitialize } =
+    useNodeManagement();
 
   return (
     <DashboardContainer>
       <Header />
       <MainContent>
         <Sidebar>
-          <NodeList 
-            nodes={nodes} 
-            selectedNode={selectedNode} 
+          <NodeList
+            nodes={nodes}
+            selectedNode={selectedNode}
             onNodeSelect={handleNodeSelect}
           />
-          <Button 
-            onClick={() => setShowPopup(true)}
-            variant='start'
-          >
+          <Button onClick={() => setShowPopup(true)} variant="start">
             Initialize Node
           </Button>
         </Sidebar>
-        <ContentArea>
-        
-        </ContentArea>
+        <ContentArea></ContentArea>
       </MainContent>
 
       <PopupWrapper isOpen={showPopup} onClose={() => setShowPopup(false)}>

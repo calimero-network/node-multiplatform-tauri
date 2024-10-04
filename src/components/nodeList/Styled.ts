@@ -22,7 +22,7 @@ export const NodeListItem = styled.li<NodeListItemProps>`
   cursor: pointer;
   padding: 0.75rem;
   margin-bottom: 0.5rem;
-  background-color: ${props => props.selected ? '#3498db' : '#2c3e50'};
+  background-color: ${(props) => (props.selected ? '#3498db' : '#2c3e50')};
   border-radius: 4px;
   transition: background-color 0.3s ease;
 
@@ -42,5 +42,5 @@ export const StatusIcon = styled.span<{ $isRunning: boolean }>`
   height: 10px;
   border-radius: 50%;
   margin-right: 8px;
-  background-color: ${props => props.$isRunning ? '#4CAF50' : '#F44336'};
+  background-color: ${(props) => (props.$isRunning ? '#4CAF50' : '#F44336')};
 `;

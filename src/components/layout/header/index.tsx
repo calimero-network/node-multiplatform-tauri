@@ -5,7 +5,7 @@ import {
   LogoContainer,
   DashboardText,
   HeaderTitle,
-  Placeholder
+  Placeholder,
 } from './Styled';
 import calimeroLogo from '../../../assets/calimero-logo.svg';
 

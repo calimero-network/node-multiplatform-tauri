@@ -7,7 +7,11 @@ interface PopupWrapperProps {
   children: ReactNode;
 }
 
-const PopupWrapper: React.FC<PopupWrapperProps> = ({ isOpen, onClose, children }) => {
+const PopupWrapper: React.FC<PopupWrapperProps> = ({
+  isOpen,
+  onClose,
+  children,
+}) => {
   if (!isOpen) return null;
 
   return (

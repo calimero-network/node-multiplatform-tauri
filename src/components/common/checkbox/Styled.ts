@@ -9,7 +9,7 @@ export const Label = styled.label`
   display: flex;
   align-items: center;
   font-weight: 500;
-  color: #FFFFFF;
+  color: #ffffff;
   cursor: pointer;
 `;
 
@@ -27,14 +27,14 @@ export const StyledCheckbox = styled.input`
     background-color: #3498db;
     border-color: #3498db;
     position: relative;
-    
+
     &:after {
       content: '✓';
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: #FFFFFF;
+      color: #ffffff;
       font-size: 14px;
     }
   }

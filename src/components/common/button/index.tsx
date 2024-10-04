@@ -5,7 +5,11 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'start' | 'stop' | 'configure' | 'delete' | 'logs' | 'controls';
 }
 
-const Button: React.FC<ButtonProps> = ({ children, variant = 'start', ...props }) => {
+const Button: React.FC<ButtonProps> = ({
+  children,
+  variant = 'start',
+  ...props
+}) => {
   return (
     <StyledButton variant={variant} {...props}>
       {children}

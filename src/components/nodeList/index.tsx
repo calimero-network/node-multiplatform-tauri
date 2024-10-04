@@ -5,7 +5,7 @@ import {
   NodeListUl,
   NodeListItem,
   Notice,
-  StatusIcon
+  StatusIcon,
 } from './Styled';
 
 interface NodeStatus {
@@ -14,7 +14,7 @@ interface NodeStatus {
   node_ports: {
     server_port: number;
     swarm_port: number;
-  }
+  };
 }
 
 interface NodeListProps {
@@ -23,7 +23,11 @@ interface NodeListProps {
   onNodeSelect: (nodeName: string) => void;
 }
 
-const NodeList: React.FC<NodeListProps> = ({ nodes, selectedNode, onNodeSelect }) => {
+const NodeList: React.FC<NodeListProps> = ({
+  nodes,
+  selectedNode,
+  onNodeSelect,
+}) => {
   return (
     <NodeListContainer>
       <NodeListTitle>Nodes</NodeListTitle>
@@ -32,8 +36,8 @@ const NodeList: React.FC<NodeListProps> = ({ nodes, selectedNode, onNodeSelect }
           <Notice>Select a node:</Notice>
           <NodeListUl>
             {nodes.map((node) => (
-              <NodeListItem 
-                key={node.name} 
+              <NodeListItem
+                key={node.name}
                 selected={node.name === selectedNode}
                 onClick={() => onNodeSelect(node.name)}
               >

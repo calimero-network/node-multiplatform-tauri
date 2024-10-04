@@ -53,7 +53,9 @@ export const StyledButton = styled.button<{ variant: ButtonProps['variant'] }>`
   font-size: 14px;
   line-height: 40px;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.1s ease;
+  transition:
+    background-color 0.3s ease,
+    transform 0.1s ease;
   box-sizing: border-box;
 
   &:hover {
