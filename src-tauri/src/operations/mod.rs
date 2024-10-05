@@ -80,32 +80,45 @@ pub async fn update_node_config(
     swarm_port: u32,
     run_on_startup: bool,
 ) -> Result<bool> {
-    // Rename the node directory if the name has changed
-    if original_node_name != node_name {
-        let nodes_dir = get_nodes_dir(&state.app_handle);
-        let node_dir = nodes_dir.join(&original_node_name);
-        let new_node_dir = nodes_dir.join(&node_name);
-        fs::rename(&node_dir, &new_node_dir).map_err(|e| eyre!("Cannot change node name, node with name {} already exists: {}", node_name, e))?;
+    let nodes_dir = get_nodes_dir(&state.app_handle);
+    let original_node_dir = nodes_dir.join(&original_node_name);
+    let new_node_dir = nodes_dir.join(&node_name);
+
+    // Check if the new node name is already taken
+    if original_node_name != node_name && new_node_dir.exists() {
+        return Err(eyre!("Cannot change node name, node with name {} already exists", node_name));
     }
 
-    let config_path = get_nodes_dir(&state.app_handle)
-        .join(&original_node_name)
-        .join("config.toml");
-    let config_content = fs::read_to_string(&config_path).map_err(|e| eyre!("Failed to read config file: {}", e))?;
+    // Read the config file
+    let config_path = original_node_dir.join("config.toml");
+    let config_content = fs::read_to_string(&config_path)
+        .map_err(|e| eyre!("Failed to read config file: {}", e))?;
 
-    let mut config: Value = toml::from_str(&config_content).map_err(|e| eyre!("Failed to parse config file: {}", e))?;
+    let mut config: Value = toml::from_str(&config_content)
+        .map_err(|e| eyre!("Failed to parse config file: {}", e))?;
 
     // Update the "swarm" and "server" sections
-    update_port(&mut config, "swarm", &swarm_port.to_string()).map_err(|e| eyre!("Failed to update swarm port: {}", e))?;
-    update_port(&mut config, "server", &server_port.to_string()).map_err(|e| eyre!("Failed to update server port: {}", e))?;
+    update_port(&mut config, "swarm", &swarm_port.to_string())
+        .map_err(|e| eyre!("Failed to update swarm port: {}", e))?;
+    update_port(&mut config, "server", &server_port.to_string())
+        .map_err(|e| eyre!("Failed to update server port: {}", e))?;
 
     // Serialize the updated config back to TOML
-    let updated_content = toml::to_string(&config).map_err(|e| eyre!("Failed to serialize config: {}", e))?;
+    let updated_content = toml::to_string(&config)
+        .map_err(|e| eyre!("Failed to serialize config: {}", e))?;
 
     // Write the updated content back to the file
-    fs::write(&config_path, updated_content).map_err(|e| eyre!("Failed to write updated config: {}", e))?;
+    fs::write(&config_path, updated_content)
+        .map_err(|e| eyre!("Failed to write updated config: {}", e))?;
 
-    update_run_node_on_startup(&state, &node_name, run_on_startup).map_err(|e| eyre!("Failed to update option to run node on startup: {}", e))?;
+    // Rename the node directory if the name has changed
+    if original_node_name != node_name {
+        fs::rename(&original_node_dir, &new_node_dir)
+            .map_err(|e| eyre!("Failed to rename node directory: {}", e))?;
+    }
+
+    update_run_node_on_startup(&state, &node_name, run_on_startup)
+        .map_err(|e| eyre!("Failed to update option to run node on startup: {}", e))?;
 
     Ok(true)
 }
