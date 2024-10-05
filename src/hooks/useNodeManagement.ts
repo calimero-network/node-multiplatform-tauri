@@ -8,12 +8,7 @@ export interface NodeDetails {
   node_ports: {
     server_port: number;
     swarm_port: number;
-  }
-}
-
-export interface NodeInitializationResult {
-  success: boolean;
-  message: string;
+  };
 }
 
 export interface UpdateNodeConfigParams {
@@ -27,6 +22,7 @@ export interface UpdateNodeConfigParams {
 export interface CommandResponse {
   success: boolean;
   message: string;
+  data: NodeDetails[] | null | string;
 }
 
 export interface NodePorts {
@@ -35,16 +31,21 @@ export interface NodePorts {
 }
 
 const useNodeManagement = () => {
-  const [nodes, setNodes] = useState<NodeDetails[]>([]);
+  const [nodes, setNodes] = useState<NodeDetails[] | null>(null);
   const [selectedNode, setSelectedNode] = useState<NodeDetails | null>(null);
 
   const refreshNodesList = async () => {
     try {
-      const nodesStatus = await invoke<NodeDetails[]>('fetch_nodes');
-      console.log('Nodes status:', nodesStatus);
-      setNodes(nodesStatus);
+      const nodesStatus = await invoke<CommandResponse>('fetch_nodes');
+      if (nodesStatus.success) {
+        setNodes(nodesStatus.data as NodeDetails[]);
+      } else {
+        console.error('Error fetching nodes status:', nodesStatus.message);
+        alert(nodesStatus.message);
+      }
     } catch (error) {
       console.error('Error fetching nodes status:', error);
+      alert(error);
     }
   };
 
@@ -53,35 +54,50 @@ const useNodeManagement = () => {
   }, []);
 
   const handleNodeSelect = (nodeName: string) => {
-    setSelectedNode(nodes.find(node => node.name === nodeName) || null);
+    setSelectedNode(nodes?.find((node) => node.name === nodeName) || null);
   };
 
-  const handleNodeInitialize = async (nodeName: string, serverPort: number, swarmPort: number, runOnStartup: boolean): Promise<NodeInitializationResult> => {
+  const handleNodeInitialize = async (
+    nodeName: string,
+    serverPort: number,
+    swarmPort: number,
+    runOnStartup: boolean
+  ): Promise<CommandResponse> => {
     try {
-      const result = await invoke<{ success: boolean; message: string }>('initialize_node', {
+      const result = await invoke<CommandResponse>('initialize_node', {
         nodeName,
         serverPort,
         swarmPort,
-        runOnStartup
+        runOnStartup,
       });
       if (result.success) {
-        await refreshNodesList(); // Refresh the node list and status 
+        await refreshNodesList(); // Refresh the node list and status
       }
-      return result;
-    } catch (error: any) {
+      return {
+        success: result.success,
+        message: result.message,
+        data: null,
+      };
+    } catch (error: unknown) {
       console.error('Failed to initialize node:', error);
-      return error;
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        data: null,
+      };
     }
   };
 
-  const handleNodeConfigUpdate = async (config: UpdateNodeConfigParams): Promise<CommandResponse> => {
+  const handleNodeConfigUpdate = async (
+    config: UpdateNodeConfigParams
+  ): Promise<CommandResponse> => {
     try {
       const result = await invoke<CommandResponse>('update_node', {
         originalNodeName: config.originalNodeName,
         nodeName: config.nodeName,
         serverPort: config.serverPort,
         swarmPort: config.swarmPort,
-        runOnStartup: config.runOnStartup
+        runOnStartup: config.runOnStartup,
       });
       await refreshNodesList();
       return result;
@@ -90,8 +106,10 @@ const useNodeManagement = () => {
       throw error;
     }
   };
-  
-  const handleNodeStart = async (nodeName: string): Promise<CommandResponse> => {
+
+  const handleNodeStart = async (
+    nodeName: string
+  ): Promise<CommandResponse> => {
     try {
       const result = await invoke<CommandResponse>('start_node', { nodeName });
       await refreshNodesList();
@@ -109,7 +127,22 @@ const useNodeManagement = () => {
       return result;
     } catch (error) {
       console.error('Error stopping node:', error);
-      return { success: false, message: `Error: ${error}` };
+      return { success: false, message: `Error: ${error}`, data: null };
+    }
+  };
+
+  const handleNodeLogs = async (nodeName: string): Promise<CommandResponse> => {
+    try {
+      const result = await invoke<CommandResponse>('get_node_log', { nodeName });
+      console.log("result", result);
+      if(result.success) {
+        return result;
+      } else {
+        return { success: false, message: result.message, data: null };
+      }
+    } catch (error) {
+      console.error('Error getting node logs:', error);
+      return { success: false, message: `Error: ${error}`, data: null };
     }
   };
 
@@ -122,7 +155,8 @@ const useNodeManagement = () => {
     refreshNodesList,
     handleNodeConfigUpdate,
     handleNodeStart,
-    handleNodeStop
+    handleNodeStop,
+    handleNodeLogs,
   };
 };
 
