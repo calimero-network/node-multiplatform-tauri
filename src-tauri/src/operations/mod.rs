@@ -2,7 +2,7 @@ use eyre::{eyre, Result};
 use multiaddr::{Multiaddr, Protocol};
 use serde_json::Value;
 use std::{fs, process::Command};
-use tauri::{AppHandle, State};
+use tauri::State;
 
 use crate::{
     store::{get_run_node_on_startup, update_run_node_on_startup},

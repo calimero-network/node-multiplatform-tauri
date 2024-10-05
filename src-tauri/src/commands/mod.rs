@@ -1,4 +1,4 @@
-use tauri::{AppHandle, State};
+use tauri::State;
 
 use crate::{
     operations::{create_node, get_nodes, update_node_config},
