@@ -10,7 +10,10 @@ import {
   TerminalForm,
   TerminalInput,
 } from './Styled';
-import { NodeDetails, CommandResponse } from '../../../hooks/useNodeManagement';
+import useNodeManagement, {
+  NodeDetails,
+  CommandResponse,
+} from '../../../hooks/useNodeManagement';
 
 interface NodeControlsProps {
   selectedNode: NodeDetails;
@@ -30,6 +33,7 @@ const NodeControls: React.FC<NodeControlsProps> = ({
   const [input, setInput] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(selectedNode.is_running);
   const outputRef = useRef<HTMLPreElement>(null);
+  const { handleGetNodeOutput } = useNodeManagement();
 
   useEffect(() => {
     setIsRunning(selectedNode.is_running);
@@ -56,14 +60,13 @@ const NodeControls: React.FC<NodeControlsProps> = ({
     // Fetch current node status and output
     const fetchNodeStatus = async () => {
       try {
-        const currentOutput = await invoke<CommandResponse>(
-          'get_node_current_output',
-          { nodeName: selectedNode.name }
+        const currentOutput: CommandResponse = await handleGetNodeOutput(
+          selectedNode.name
         );
         if (currentOutput.success) {
-          setOutput(currentOutput.message);
+          setOutput(currentOutput.data as string);
         } else {
-          setOutput('');
+          setOutput(currentOutput.message);
         }
       } catch (error) {
         console.error('Error fetching node status:', error);

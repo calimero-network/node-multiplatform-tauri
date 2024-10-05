@@ -59,7 +59,7 @@ pub fn is_node_process_running(node_name: &str) -> Result<bool> {
         RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
     );
 
-    let pattern = format!(r"meroctl.*--node-name\s+{}.*run", regex_escape(node_name));
+    let pattern = format!(r"meroctl.*--node-name\s+\b{}\b.*run", regex_escape(node_name));
     let re = Regex::new(&pattern).map_err(|e| eyre!("Failed to create regex: {}", e))?;
 
     Ok(system.processes().values().any(|process| {

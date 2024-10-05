@@ -1,14 +1,17 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::fs::File;
 use std::process::Child;
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 use tauri_plugin_store::Store;
 
+#[derive(Debug)]
 pub struct NodeProcess {
     pub process: Option<Child>,
     pub stdin: Option<Sender<String>>,
     pub output: Arc<Mutex<String>>,
+    pub log_file: Option<File>,
 }
 
 pub struct NodeManager {

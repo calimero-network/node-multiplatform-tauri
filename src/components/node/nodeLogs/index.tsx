@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { LogsContainer, LogsOutput, LogsHeader } from './Styled';
-import useNodeManagement, { CommandResponse, NodeDetails } from '../../../hooks/useNodeManagement';
+import useNodeManagement, {
+  CommandResponse,
+  NodeDetails,
+} from '../../../hooks/useNodeManagement';
 
 interface NodeLogsProps {
   selectedNode: NodeDetails;
@@ -12,12 +15,12 @@ const NodeLogs: React.FC<NodeLogsProps> = ({ selectedNode }) => {
   const logsOutputRef = useRef<HTMLPreElement>(null);
 
   const { handleNodeLogs } = useNodeManagement();
-  
+
   const fetchLogs = async () => {
     try {
       const result: CommandResponse = await handleNodeLogs(selectedNode.name);
       if (result.success) {
-        setLogs(result.data as string);        
+        setLogs(result.data as string);
       } else {
         setLogs(result.message);
       }

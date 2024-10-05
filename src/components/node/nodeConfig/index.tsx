@@ -34,21 +34,21 @@ const NodeConfig: React.FC<NodeConfigProps> = ({
   const [runOnStartup, setRunOnStartup] = useState<boolean>(
     selectedNode.run_on_startup
   );
-  const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string>('');
+  const [successMessage, setSuccessMessage] = useState<string>('');
 
   useEffect(() => {
     setServerPort(selectedNode.node_ports.server_port);
     setSwarmPort(selectedNode.node_ports.swarm_port);
     setNodeName(selectedNode.name);
     setRunOnStartup(selectedNode.run_on_startup);
-    setError(null);
-    setSuccessMessage(null);
+    setError('');
+    setSuccessMessage('');
   }, [selectedNode]);
 
   const handleUpdateConfig = async () => {
-    setError(null);
-    setSuccessMessage(null);
+    setError('');
+    setSuccessMessage('');
     try {
       const result: CommandResponse = await onConfigUpdate({
         originalNodeName: selectedNode.name,
@@ -61,7 +61,7 @@ const NodeConfig: React.FC<NodeConfigProps> = ({
       if (result.success) {
         setSuccessMessage('Node configuration updated successfully');
         setTimeout(() => {
-          setSuccessMessage(null);
+          setSuccessMessage('');
         }, 2000);
       } else {
         setError(result.message);

@@ -37,6 +37,7 @@ const useNodeManagement = () => {
   const refreshNodesList = async () => {
     try {
       const nodesStatus = await invoke<CommandResponse>('fetch_nodes');
+      console.log('nodesStatus', nodesStatus);
       if (nodesStatus.success) {
         setNodes(nodesStatus.data as NodeDetails[]);
       } else {
@@ -133,15 +134,31 @@ const useNodeManagement = () => {
 
   const handleNodeLogs = async (nodeName: string): Promise<CommandResponse> => {
     try {
-      const result = await invoke<CommandResponse>('get_node_log', { nodeName });
-      console.log("result", result);
-      if(result.success) {
+      const result = await invoke<CommandResponse>('get_node_log', {
+        nodeName,
+      });
+      console.log('result', result);
+      if (result.success) {
         return result;
       } else {
         return { success: false, message: result.message, data: null };
       }
     } catch (error) {
       console.error('Error getting node logs:', error);
+      return { success: false, message: `Error: ${error}`, data: null };
+    }
+  };
+
+  const handleGetNodeOutput = async (
+    nodeName: string
+  ): Promise<CommandResponse> => {
+    try {
+      const result = await invoke<CommandResponse>('get_node_current_output', {
+        nodeName,
+      });
+      return result;
+    } catch (error) {
+      console.error('Error getting node output:', error);
       return { success: false, message: `Error: ${error}`, data: null };
     }
   };
@@ -157,6 +174,7 @@ const useNodeManagement = () => {
     handleNodeStart,
     handleNodeStop,
     handleNodeLogs,
+    handleGetNodeOutput,
   };
 };
 
