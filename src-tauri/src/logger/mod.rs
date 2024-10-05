@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use eyre::{eyre, Error, Result};
 use tauri::{AppHandle, State};
 
-const MAX_LOG_SIZE: usize = 5 * 1024;
+const MAX_LOG_SIZE: usize = 5 * 1024 * 1024; // 5MB
 
 pub fn create_log_file(app_handle: &AppHandle, node_name: &str) -> Result<File, Error> {
     let log_path = get_log_file_path(app_handle, node_name);
