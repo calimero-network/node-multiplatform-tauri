@@ -11,7 +11,7 @@ import {
   Sidebar,
   ContentArea,
 } from './Styled';
-import NodeOperations from '../../components/node/nodeActions';
+import NodeOperations from '../../components/node/nodeOperations';
 
 const Dashboard: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);

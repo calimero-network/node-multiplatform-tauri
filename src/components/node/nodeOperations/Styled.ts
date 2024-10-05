@@ -28,5 +28,5 @@ export const NodeActions = styled.div`
 `;
 
 export const MainContent = styled.div`
-  // Add your styles here
+  display: block;
 `;

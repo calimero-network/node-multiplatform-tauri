@@ -50,7 +50,7 @@ const NodeConfig: React.FC<NodeConfigProps> = ({
     setError(null);
     setSuccessMessage(null);
     try {
-      const result = await onConfigUpdate({
+      const result: CommandResponse = await onConfigUpdate({
         originalNodeName: selectedNode.name,
         nodeName: nodeName,
         serverPort: serverPort,

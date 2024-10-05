@@ -11,12 +11,6 @@ export interface NodeDetails {
   };
 }
 
-export interface NodeInitializationResult {
-  success: boolean;
-  message: string;
-  data: NodeDetails[] | null;
-}
-
 export interface UpdateNodeConfigParams {
   originalNodeName: string;
   nodeName: string;
@@ -28,6 +22,7 @@ export interface UpdateNodeConfigParams {
 export interface CommandResponse {
   success: boolean;
   message: string;
+  data: NodeDetails[] | null;
 }
 
 export interface NodePorts {
@@ -41,7 +36,7 @@ const useNodeManagement = () => {
 
   const refreshNodesList = async () => {
     try {
-      const nodesStatus = await invoke<NodeInitializationResult>('fetch_nodes');
+      const nodesStatus = await invoke<CommandResponse>('fetch_nodes');
       if (nodesStatus.success) {
         setNodes(nodesStatus.data);
       } else {
@@ -67,9 +62,9 @@ const useNodeManagement = () => {
     serverPort: number,
     swarmPort: number,
     runOnStartup: boolean
-  ): Promise<NodeInitializationResult> => {
+  ): Promise<CommandResponse> => {
     try {
-      const result = await invoke<NodeInitializationResult>('initialize_node', {
+      const result = await invoke<CommandResponse>('initialize_node', {
         nodeName,
         serverPort,
         swarmPort,
