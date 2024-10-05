@@ -10,7 +10,10 @@ import {
   TerminalForm,
   TerminalInput,
 } from './Styled';
-import MessagePopup from '../../common/popupMessage';
+import MessagePopup, {
+  MessagePopupState,
+  MessageType,
+} from '../../common/popupMessage';
 import useNodeManagement, {
   NodeDetails,
   CommandResponse,
@@ -33,11 +36,11 @@ const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
     props.selectedNode.is_running
   );
   const outputRef = useRef<HTMLPreElement>(null);
-  const [messagePopup, setMessagePopup] = useState({
+  const [messagePopup, setMessagePopup] = useState<MessagePopupState>({
     isOpen: false,
     message: '',
     title: '',
-    type: 'info' as const,
+    type: MessageType.INFO,
   });
   const { handleGetNodeOutput } = useNodeManagement();
 
@@ -135,7 +138,7 @@ const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
         isOpen: true,
         message: 'Node is already running.',
         title: 'Node Status',
-        type: 'info',
+        type: MessageType.INFO,
       });
       setOutput((prevOutput) => prevOutput + 'Node is already running.\n');
     }
@@ -161,7 +164,7 @@ const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
         isOpen: true,
         message: 'Node is not running.',
         title: 'Node Status',
-        type: 'info',
+        type: MessageType.INFO,
       });
     }
   };

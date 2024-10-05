@@ -15,9 +15,11 @@ const DeleteNode: React.FC<DeleteNodeProps> = ({
   onDeleteSuccess,
 }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const handleDelete = async () => {
     try {
+      setIsLoading(true);
       const result = await handleDeleteNode();
       if (result.success) {
         onDeleteSuccess();
@@ -28,6 +30,7 @@ const DeleteNode: React.FC<DeleteNodeProps> = ({
       console.error('Error deleting node:', error);
       setErrorMessage('An unexpected error occurred while deleting the node.');
     }
+    setIsLoading(false);
   };
 
   return (
@@ -39,7 +42,7 @@ const DeleteNode: React.FC<DeleteNodeProps> = ({
       <Button onClick={onCancel} variant="stop">
         Cancel
       </Button>
-      <Button onClick={handleDelete} variant="delete">
+      <Button onClick={handleDelete} variant="delete" disabled={isLoading}>
         Confirm Delete
       </Button>
     </DeleteNodeContainer>

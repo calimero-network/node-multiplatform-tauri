@@ -1,33 +1,33 @@
 import React from 'react';
 import Button from '../button';
-import styled from 'styled-components';
 import PopupWrapper from '../popup';
+import {
+  MessageContent,
+  MessagePopupButtons,
+  MessageText,
+  MessageTitle,
+} from './Styled';
 
 interface MessagePopupProps {
   isOpen: boolean;
   onClose: () => void;
   message: string;
   title: string;
-  type?: 'info' | 'warning' | 'error';
+  type: MessageType;
 }
 
-const MessageContent = styled.div`
-  text-align: center;
-`;
+export enum MessageType {
+  INFO,
+  WARNING,
+  ERROR,
+}
 
-const MessageTitle = styled.h2`
-  margin-bottom: 1rem;
-`;
-
-const MessageText = styled.p`
-  margin-bottom: 1rem;
-`;
-
-const MessagePopupButtons = styled.div`
-  display: flex;
-  justify-content: center;
-  margin-top: 1rem;
-`;
+export type MessagePopupState = {
+  isOpen: boolean;
+  message: string;
+  title: string;
+  type: MessageType;
+};
 
 const MessagePopup: React.FC<MessagePopupProps> = ({ ...props }) => {
   return (
@@ -38,7 +38,7 @@ const MessagePopup: React.FC<MessagePopupProps> = ({ ...props }) => {
         <MessagePopupButtons>
           <Button
             onClick={props.onClose}
-            variant={props.type === 'error' ? 'stop' : 'start'}
+            variant={props.type === MessageType.ERROR ? 'stop' : 'start'}
           >
             OK
           </Button>

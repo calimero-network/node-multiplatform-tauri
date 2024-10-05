@@ -16,7 +16,10 @@ import NodeControls from '../nodeControls';
 import NodeLogs from '../nodeLogs';
 import { TrayAction } from '../../../pages/dashboard';
 import DeleteNode from '../nodeDelete';
-import MessagePopup from '../../common/popupMessage';
+import MessagePopup, {
+  MessagePopupState,
+  MessageType,
+} from '../../common/popupMessage';
 
 interface NodeOperationsProps {
   selectedNode: NodeDetails;
@@ -36,11 +39,11 @@ const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
   const [activeSection, setActiveSection] = useState<
     'config' | 'controls' | 'logs' | 'delete' | null
   >('controls');
-  const [messagePopup, setMessagePopup] = useState({
+  const [messagePopup, setMessagePopup] = useState<MessagePopupState>({
     isOpen: false,
     message: '',
     title: '',
-    type: 'info' as const,
+    type: MessageType.INFO,
   });
 
   useEffect(() => {
@@ -57,7 +60,7 @@ const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
         isOpen: true,
         message: 'Node is not running',
         title: 'Error',
-        type: 'info',
+        type: MessageType.ERROR,
       });
     }
   };
