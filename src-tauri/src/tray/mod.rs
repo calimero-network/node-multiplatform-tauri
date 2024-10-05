@@ -90,11 +90,11 @@ fn add_node_items(
 }
 
 pub fn handle_tray_click(app_handle: &AppHandle, menu_id: &str) -> Result<(), eyre::Report> {
-    let parts: Vec<&str> = menu_id.split('_').collect();
-    match parts.as_slice() {
-        ["show", "window"] => show_main_window(app_handle),
-        [action, node] => handle_tray_action(app_handle, action, node),
-        ["quit"] => {
+    let mut parts = menu_id.split('_');
+    match (parts.next(), parts.next()) {
+        (Some("show"), Some("window")) => show_main_window(app_handle),
+        (Some(action), Some(node)) => handle_tray_action(app_handle, action, node),
+        (Some("quit"), None) => {
             app_handle.exit(0);
             Ok(())
         }
@@ -109,7 +109,7 @@ pub fn handle_tray_action(
 ) -> Result<(), eyre::Report> {
     let window = get_main_window(app_handle)?;
 
-    if ["controls", "configure", "logs", "show"].contains(&action) {
+    if matches!(action, "controls" | "configure" | "logs" | "show") {
         window.show()?;
         window.set_focus()?;
     }
