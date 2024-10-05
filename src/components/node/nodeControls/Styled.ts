@@ -51,4 +51,3 @@ export const TerminalButton = styled.button`
   font-family: monospace;
   width: 100%;
 `;
- 

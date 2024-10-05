@@ -268,10 +268,7 @@ pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result
                 }
                 // Ensure the emitted event name and data format are correct
                 app_handle
-                    .emit_all(
-                        &format!("node-output-{}", node_name), 
-                        cleaned_line + "\n"
-                    )
+                    .emit_all(&format!("node-output-{}", node_name), cleaned_line + "\n")
                     .map_err(|e| eyre!("Failed to emit output for node {}: {}", node_name, e))?;
 
                 Ok(())

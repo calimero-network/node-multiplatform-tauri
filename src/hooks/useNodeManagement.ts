@@ -106,8 +106,10 @@ const useNodeManagement = () => {
       throw error;
     }
   };
-  
-  const handleNodeStart = async (nodeName: string): Promise<CommandResponse> => {
+
+  const handleNodeStart = async (
+    nodeName: string
+  ): Promise<CommandResponse> => {
     try {
       const result = await invoke<CommandResponse>('start_node', { nodeName });
       await refreshNodesList();
@@ -138,7 +140,7 @@ const useNodeManagement = () => {
     refreshNodesList,
     handleNodeConfigUpdate,
     handleNodeStart,
-    handleNodeStop
+    handleNodeStop,
   };
 };
 

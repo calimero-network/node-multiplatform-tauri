@@ -18,32 +18,37 @@ interface NodeControlsProps {
   handleNodeStop: (nodeName: string) => Promise<CommandResponse>;
 }
 
- // Define a type for the event payload
- type EventPayload = string;
+// Define a type for the event payload
+type EventPayload = string;
 
-const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeStart, handleNodeStop }) => {
+const NodeControls: React.FC<NodeControlsProps> = ({
+  selectedNode,
+  handleNodeStart,
+  handleNodeStop,
+}) => {
   const [output, setOutput] = useState<string>('');
   const [input, setInput] = useState<string>('');
   const [isRunning, setIsRunning] = useState<boolean>(selectedNode.is_running);
   const outputRef = useRef<HTMLPreElement>(null);
 
   useEffect(() => {
-
     setIsRunning(selectedNode.is_running);
     let unsubscribe: UnlistenFn | null = null;
 
     const setupTerminalListener = async () => {
-
       // Clean up previous listener if it exists
       if (unsubscribe) {
         unsubscribe();
       }
 
       // Set up new listener
-      unsubscribe = await listen(`node-output-${selectedNode.name}`, (event: { payload: EventPayload }) => {
-        const eventData = event.payload;
-        setOutput(prevOutput => prevOutput + eventData);
-      });
+      unsubscribe = await listen(
+        `node-output-${selectedNode.name}`,
+        (event: { payload: EventPayload }) => {
+          const eventData = event.payload;
+          setOutput((prevOutput) => prevOutput + eventData);
+        }
+      );
     };
 
     setupTerminalListener();
@@ -51,13 +56,15 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
     // Fetch current node status and output
     const fetchNodeStatus = async () => {
       try {
-        const currentOutput = await invoke<CommandResponse>('get_node_current_output', { nodeName: selectedNode.name });
-        if(currentOutput.success){
+        const currentOutput = await invoke<CommandResponse>(
+          'get_node_current_output',
+          { nodeName: selectedNode.name }
+        );
+        if (currentOutput.success) {
           setOutput(currentOutput.message);
-        }else {
+        } else {
           setOutput('');
         }
-
       } catch (error) {
         console.error('Error fetching node status:', error);
       }
@@ -84,7 +91,7 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
       try {
         setOutput('Starting node...\n');
         const result = await handleNodeStart(selectedNode.name);
-        setOutput(prevOutput => prevOutput + `${result.message}\n`);
+        setOutput((prevOutput) => prevOutput + `${result.message}\n`);
         if (result.success) {
           setIsRunning(true);
         } else {
@@ -92,26 +99,34 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
         }
       } catch (error) {
         console.error('Error starting node:', error);
-        setOutput(prevOutput => prevOutput + `Failed to start node: ${
-          error && typeof error === 'object' && 'message' in error
-            ? error.message
-            : 'Unknown error'
-        }\n`);
+        setOutput(
+          (prevOutput) =>
+            prevOutput +
+            `Failed to start node: ${
+              error && typeof error === 'object' && 'message' in error
+                ? error.message
+                : 'Unknown error'
+            }\n`
+        );
         setIsRunning(false);
       }
     } else {
-      setOutput(prevOutput => prevOutput + 'Node is already running.\n');
+      setOutput((prevOutput) => prevOutput + 'Node is already running.\n');
     }
   };
 
   const handleStop = async () => {
-    setOutput(prevOutput => prevOutput + 'Stopping node...\n');
+    setOutput((prevOutput) => prevOutput + 'Stopping node...\n');
     const result = await handleNodeStop(selectedNode.name);
     if (result.success) {
-      setOutput(prevOutput => prevOutput + `Node stopped: ${result.message}\n`);
+      setOutput(
+        (prevOutput) => prevOutput + `Node stopped: ${result.message}\n`
+      );
       setIsRunning(false);
     } else {
-      setOutput(prevOutput => prevOutput + `Failed to stop node: ${result.message}\n`);
+      setOutput(
+        (prevOutput) => prevOutput + `Failed to stop node: ${result.message}\n`
+      );
     }
   };
 
@@ -126,11 +141,15 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
         await invoke('send_input', { nodeName: selectedNode.name, input });
         setInput('');
       } catch (error) {
-        setOutput(prevOutput => prevOutput + `Error sending input: ${
-          error && typeof error === 'object' && 'message' in error
-            ? error.message
-            : 'Unknown error'
-        }\n`);
+        setOutput(
+          (prevOutput) =>
+            prevOutput +
+            `Error sending input: ${
+              error && typeof error === 'object' && 'message' in error
+                ? error.message
+                : 'Unknown error'
+            }\n`
+        );
       }
     }
   };
@@ -138,8 +157,12 @@ const NodeControls: React.FC<NodeControlsProps> = ({ selectedNode, handleNodeSta
   return (
     <ControlsContainer>
       <ButtonGroup>
-        <Button variant='start' onClick={handleStart} disabled={isRunning}>Start Node</Button>
-        <Button variant='stop' onClick={handleStop} disabled={!isRunning}>Stop Node</Button>
+        <Button variant="start" onClick={handleStart} disabled={isRunning}>
+          Start Node
+        </Button>
+        <Button variant="stop" onClick={handleStop} disabled={!isRunning}>
+          Stop Node
+        </Button>
       </ButtonGroup>
       <TerminalContainer>
         <TerminalOutput ref={outputRef}>{output}</TerminalOutput>
