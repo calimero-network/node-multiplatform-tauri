@@ -75,20 +75,29 @@ fn add_node_items(
             format!("show_{}", node),
             format!("Show {} window", node),
         ))
-        .add_item(if is_running {
-            CustomMenuItem::new(format!("start_{}", node), "Start").disabled()
-        } else {
-            CustomMenuItem::new(format!("start_{}", node), "Start")
+        .add_item({
+            let item = CustomMenuItem::new(format!("start_{}", node), "Start");
+            if is_running {
+                item.disabled()
+            } else {
+                item
+            }
         })
-        .add_item(if is_running {
-            CustomMenuItem::new(format!("stop_{}", node), "Stop")
-        } else {
-            CustomMenuItem::new(format!("stop_{}", node), "Stop").disabled()
+        .add_item({
+            let item = CustomMenuItem::new(format!("stop_{}", node), "Stop");
+            if is_running {
+                item
+            } else {
+                item.disabled()
+            }
         })
-        .add_item(if is_running {
-            CustomMenuItem::new(format!("dashboard_{}", node), "Dashboard")
-        } else {
-            CustomMenuItem::new(format!("dashboard_{}", node), "Dashboard").disabled()
+        .add_item({
+            let item = CustomMenuItem::new(format!("dashboard_{}", node), "Dashboard");
+            if is_running {
+                item
+            } else {
+                item.disabled()
+            }
         })
         .add_item(CustomMenuItem::new(format!("config_{}", node), "Configure"))
         .add_item(CustomMenuItem::new(format!("logs_{}", node), "Logs"))
