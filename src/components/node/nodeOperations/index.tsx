@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import Button from '../common/Button';
-import NodeConfig from './NodeConfig';
+import Button from '../../common/button';
+import NodeConfig from '../nodeConfig';
 import {
   UpdateNodeConfigParams,
   CommandResponse,
   NodeDetails,
-} from '../../hooks/useNodeManagement';
+} from '../../../hooks/useNodeManagement';
 import {
   OperationsContainer,
   NodeTitle,
   NodeActions,
   MainContent,
-} from '../../styles/SelectedNodeOperationsStyles';
-import NodeControls from './NodeControls';
-import NodeLogs from './NodeLogs';
-import { TrayAction } from '../../pages/Dashboard';
+} from './Styled';
+import NodeControls from '../nodeControls';
+import NodeLogs from '../nodeLogs';
+import { TrayAction } from '../../../pages/dashboard';
 
-interface SelectedNodeOperationsProps {
+interface NodeOperationsProps {
   selectedNode: NodeDetails;
   handleNodeConfigUpdate: (
     config: UpdateNodeConfigParams
@@ -24,30 +24,23 @@ interface SelectedNodeOperationsProps {
   handleNodeStart: (nodeName: string) => Promise<CommandResponse>;
   handleNodeStop: (nodeName: string) => Promise<CommandResponse>;
   trayAction: TrayAction | null;
+  setTrayAction: (action: TrayAction | null) => void;
 }
 
-const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({
-  selectedNode,
-  handleNodeConfigUpdate,
-  handleNodeStart,
-  handleNodeStop,
-  trayAction,
-}) => {
+const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
   const [activeSection, setActiveSection] = useState<
     'config' | 'controls' | 'logs' | null
   >('controls');
-  const [action, setAction] = useState<string | null>(null);
 
   useEffect(() => {
-    if (trayAction) {
-      setActiveSection(trayAction.section);
-      setAction(trayAction.action);
+    if (props.trayAction) {
+      setActiveSection(props.trayAction.section);
     }
-  }, [trayAction]);
+  }, [props.trayAction]);
 
   return (
     <OperationsContainer>
-      <NodeTitle>Currently selected node: {selectedNode.name}</NodeTitle>
+      <NodeTitle>Currently selected node: {props.selectedNode.name}</NodeTitle>
       <NodeActions>
         <Button onClick={() => setActiveSection('controls')} variant="controls">
           Node Controls
@@ -62,23 +55,23 @@ const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({
       <MainContent>
         {activeSection === 'config' && (
           <NodeConfig
-            selectedNode={selectedNode}
-            onConfigUpdate={handleNodeConfigUpdate}
+            selectedNode={props.selectedNode}
+            onConfigUpdate={props.handleNodeConfigUpdate}
             onClose={() => setActiveSection(null)}
           />
         )}
         {activeSection === 'controls' && (
           <NodeControls
-            selectedNode={selectedNode}
-            handleNodeStart={handleNodeStart}
-            handleNodeStop={handleNodeStop}
-            action={action}
-            setAction={setAction}
+            selectedNode={props.selectedNode}
+            handleNodeStart={props.handleNodeStart}
+            handleNodeStop={props.handleNodeStop}
+            action={props.trayAction?.action ?? null}
+            setAction={props.setTrayAction}
           />
         )}
         {activeSection === 'logs' && (
           <NodeLogs
-            selectedNode={selectedNode}
+            selectedNode={props.selectedNode}
             onClose={() => setActiveSection(null)}
           />
         )}
@@ -87,4 +80,4 @@ const SelectedNodeOperations: React.FC<SelectedNodeOperationsProps> = ({
   );
 };
 
-export default SelectedNodeOperations;
+export default NodeOperations;
