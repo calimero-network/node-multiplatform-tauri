@@ -1,4 +1,4 @@
-use eyre::{eyre, Result};
+use eyre::{bail, eyre, Result};
 use lazy_static::lazy_static;
 use multiaddr::{Multiaddr, Protocol};
 use serde_json::Value;
@@ -107,7 +107,7 @@ fn extract_port(config: &Value, key: &str) -> Result<u16> {
         }
     }
 
-    Err(eyre!("Failed to extract {} port", key))
+    bail!("Failed to extract {} port", key);
 }
 
 // Helper function to escape special regex characters

@@ -1,4 +1,3 @@
-// use dotenv::dotenv;
 use eyre::{bail, Result};
 use flate2::read::GzDecoder;
 use reqwest::get;
@@ -17,8 +16,6 @@ fn main() {
 }
 
 pub async fn setup_binary() -> Result<()> {
-    // dotenv().expect("Failed to load .env file");
-
     let target = determine_target();
     let binary_name = "meroctl";
     let cache_dir = std::env::temp_dir().join("meroctl");
@@ -50,10 +47,7 @@ pub async fn setup_binary() -> Result<()> {
         .expect("Failed to read file header");
 
     if &header != b"\x1f\x8b" {
-        bail!(
-            "Invalid gzip header for file: {}",
-            binary_path.display()
-        );
+        bail!("Invalid gzip header for file: {}", binary_path.display());
     }
 
     let tar_gz = File::open(&binary_path).expect("Failed to open .gz file");
@@ -86,7 +80,8 @@ fn map_target_to_binary_name(target: &str) -> String {
         "x86_64-unknown-linux-gnu" => "meroctl_x86_64-unknown-linux-gnu",
         // Add more mappings as needed
         _ => panic!("Unsupported target: {}", target),
-    }.to_string()
+    }
+    .to_string()
 }
 
 fn map_os_arch_to_binary_name(os: &str, arch: &str) -> String {
@@ -97,5 +92,6 @@ fn map_os_arch_to_binary_name(os: &str, arch: &str) -> String {
         ("linux", "x86_64") => "meroctl_x86_64-unknown-linux-gnu",
         // Add more combinations as needed
         _ => panic!("Unsupported OS/architecture combination: {}/{}", os, arch),
-    }.to_string()
+    }
+    .to_string()
 }
