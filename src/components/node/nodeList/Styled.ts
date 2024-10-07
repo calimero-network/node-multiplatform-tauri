@@ -36,11 +36,22 @@ export const Notice = styled.p`
   font-style: italic;
 `;
 
-export const StatusIcon = styled.span<{ $isRunning: boolean }>`
+export const StatusIcon = styled.span<{ $isRunning: boolean; $isExternal: boolean }>`
   display: inline-block;
-  width: 10px;
+  width: 20px;
   height: 10px;
-  border-radius: 50%;
   margin-right: 8px;
-  background-color: ${(props) => (props.$isRunning ? '#4CAF50' : '#F44336')};
+  position: relative;
+
+  &:before {
+    content: '${(props) => {
+      if (props.$isExternal) {
+        return '⚠️';
+      }
+      return props.$isRunning ? '🟢' : '🔴';
+    }}';
+    position: absolute;
+    top: -7px;
+    left: 0;
+  }
 `;

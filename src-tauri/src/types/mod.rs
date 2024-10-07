@@ -35,6 +35,7 @@ pub struct OperationResult<T = ()> {
 pub struct NodeInfo {
     pub name: String,
     pub is_running: bool,
+    pub external_node: bool,
     pub run_on_startup: bool,
     pub node_ports: NodeConfig,
 }

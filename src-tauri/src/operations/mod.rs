@@ -105,13 +105,18 @@ pub fn get_nodes(state: State<'_, AppState>) -> Result<Vec<NodeInfo>> {
         if let Some(node_name) = entry.file_name().to_str() {
             let node_name = node_name.to_owned();
             if let Ok(config) = get_node_ports(&node_name, &state.app_handle) {
-                let is_running = is_node_process_running(&node_name)?;
+                let (is_running, external_node) = match is_node_process_running(&state.app_handle, &node_name) {
+                    Ok(true) => (true, false),
+                    Ok(false) => (false, false),
+                    Err(_) => (false, true), // Assume running if there's an error
+                };
                 let run_on_startup = get_run_node_on_startup(&state, &node_name)?;
                 nodes.push(NodeInfo {
                     name: node_name,
                     is_running,
                     run_on_startup,
                     node_ports: config,
+                    external_node,
                 });
             }
         }
@@ -381,7 +386,7 @@ pub fn get_node_output(state: State<'_, AppState>, node_name: String) -> Result<
 }
 
 pub async fn stop_node_process(state: State<'_, AppState>, node_name: String) -> Result<bool> {
-    if !is_node_process_running(&node_name)? {
+    if !is_node_process_running(&state.app_handle, &node_name)? {
         return Ok(false);
     }
 
@@ -467,7 +472,7 @@ pub async fn delete_node(state: State<'_, AppState>, node_name: String) -> Resul
     }
 
     // Ensure the node is not running
-    if is_node_process_running(&node_name)? {
+    if is_node_process_running(&state.app_handle, &node_name)? {
         return Ok(false);
     }
 
@@ -548,11 +553,11 @@ pub async fn start_nodes_on_startup(state: State<'_, AppState>) -> Result<()> {
             };
             if let Value::Bool(true) = value {
                 let node_name = key.trim_end_matches("_run_on_startup");
-                let is_node_running = is_node_process_running(node_name)?;
-                if is_node_running {
-                    stop_node_process(state.clone(), node_name.to_string()).await?;
+                let node_config = get_node_ports(node_name, &state.app_handle)?;
+                println!("Node name: {}", node_name);
+                if !is_port_in_use(node_config.server_port) && is_port_in_use(node_config.swarm_port) {
+                    start_node(state.clone(), node_name.to_string()).await?;
                 }
-                start_node(state.clone(), node_name.to_string()).await?;
             }
         }
     }

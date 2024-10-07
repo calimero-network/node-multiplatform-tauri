@@ -33,6 +33,7 @@ interface NodeOperationsProps {
   handleNodeDelete: (nodeName: string) => Promise<CommandResponse>;
   trayAction: TrayAction | null;
   setTrayAction: (action: TrayAction | null) => void;
+  refreshNodesList: () => void;
 }
 
 const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
@@ -51,6 +52,17 @@ const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
       setActiveSection(props.trayAction.section);
     }
   }, [props.trayAction]);
+
+  useEffect(() => {
+    if (props.selectedNode.external_node) {
+      setMessagePopup({
+        isOpen: true,
+        message: `Node with name ${props.selectedNode.name} is currently running outside of the application. Please stop the node before continuing.`,
+        title: 'External Node',
+        type: MessageType.ERROR,
+      });
+    }
+  }, [props.selectedNode]);
 
   const openAdminDashboard = async () => {
     if (props.selectedNode.is_running) {
@@ -123,6 +135,9 @@ const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
       <MessagePopup
         isOpen={messagePopup.isOpen}
         onClose={() => setMessagePopup((prev) => ({ ...prev, isOpen: false }))}
+        setSelectedNode={() => props.handleNodeSelect('')}
+        isExternalNode={props.selectedNode.external_node}
+        refreshNodesList={props.refreshNodesList}
         message={messagePopup.message}
         title={messagePopup.title}
         type={messagePopup.type}

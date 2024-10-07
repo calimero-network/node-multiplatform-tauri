@@ -94,7 +94,7 @@ fn load_nodes(app_handle: &AppHandle) -> Result<HashMap<String, NodeProcess>> {
                 nodes.insert(
                     node_name.to_string(),
                     NodeProcess {
-                        process: None, // Not running initially
+                        process: None,
                         stdin: None,
                         output: Arc::new(Mutex::new(String::new())),
                         log_file: Some(log_file),
