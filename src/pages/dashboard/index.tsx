@@ -16,14 +16,16 @@ import { listen } from '@tauri-apps/api/event';
 
 interface TriggerActionPayload {
   nodeName: string;
-  section: 'config' | 'logs' | 'controls';
+  section: SectionTypes;
   action: string;
 }
 
 export interface TrayAction {
-  section: 'config' | 'logs' | 'controls';
+  section: SectionTypes;
   action: string | null;
 }
+
+export type SectionTypes = 'config' | 'controls' | 'logs' | 'delete';
 
 const Dashboard: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);

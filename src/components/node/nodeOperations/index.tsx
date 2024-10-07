@@ -14,7 +14,7 @@ import {
 } from './Styled';
 import NodeControls from '../nodeControls';
 import NodeLogs from '../nodeLogs';
-import { TrayAction } from '../../../pages/dashboard';
+import { SectionTypes, TrayAction } from '../../../pages/dashboard';
 import DeleteNode from '../nodeDelete';
 import MessagePopup, {
   MessagePopupState,
@@ -36,9 +36,7 @@ interface NodeOperationsProps {
 }
 
 const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
-  const [activeSection, setActiveSection] = useState<
-    'config' | 'controls' | 'logs' | 'delete' | null
-  >('controls');
+  const [activeSection, setActiveSection] = useState<SectionTypes | null>(null);
   const [messagePopup, setMessagePopup] = useState<MessagePopupState>({
     isOpen: false,
     message: '',
