@@ -16,28 +16,34 @@ import { listen } from '@tauri-apps/api/event';
 
 interface TriggerActionPayload {
   nodeName: string;
-  section: 'config' | 'logs' | 'controls';
+  section: SectionTypes;
   action: string;
 }
 
 export interface TrayAction {
-  section: 'config' | 'logs' | 'controls';
+  section: SectionTypes;
   action: string | null;
 }
+
+export type SectionTypes = 'config' | 'controls' | 'logs' | 'delete';
 
 const Dashboard: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [trayAction, setTrayAction] = useState<TrayAction | null>(null);
 
   const {
-    nodes,
+    nodesRef,
     selectedNode,
     handleNodeSelect,
     handleNodeInitialize,
     handleNodeConfigUpdate,
     handleNodeStart,
     handleNodeStop,
+    handleNodeDelete,
+    handleOpenAdminDashboard,
   } = useNodeManagement();
+
+  const nodes = nodesRef.current;
 
   useEffect(() => {
     const listeners: (() => void)[] = [];
@@ -86,6 +92,9 @@ const Dashboard: React.FC = () => {
               handleNodeConfigUpdate={handleNodeConfigUpdate}
               handleNodeStart={handleNodeStart}
               handleNodeStop={handleNodeStop}
+              handleOpenAdminDashboard={handleOpenAdminDashboard}
+              handleNodeDelete={handleNodeDelete}
+              handleNodeSelect={handleNodeSelect}
               trayAction={trayAction}
               setTrayAction={setTrayAction}
             />

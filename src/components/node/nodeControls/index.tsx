@@ -10,6 +10,10 @@ import {
   TerminalForm,
   TerminalInput,
 } from './Styled';
+import MessagePopup, {
+  MessagePopupState,
+  MessageType,
+} from '../../common/popupMessage';
 import useNodeManagement, {
   NodeDetails,
   CommandResponse,
@@ -32,6 +36,12 @@ const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
     props.selectedNode.is_running
   );
   const outputRef = useRef<HTMLPreElement>(null);
+  const [messagePopup, setMessagePopup] = useState<MessagePopupState>({
+    isOpen: false,
+    message: '',
+    title: '',
+    type: MessageType.INFO,
+  });
   const { handleGetNodeOutput } = useNodeManagement();
 
   useEffect(() => {
@@ -124,22 +134,38 @@ const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
         setIsRunning(false);
       }
     } else {
+      setMessagePopup({
+        isOpen: true,
+        message: 'Node is already running.',
+        title: 'Node Status',
+        type: MessageType.INFO,
+      });
       setOutput((prevOutput) => prevOutput + 'Node is already running.\n');
     }
   };
 
   const handleStop = async () => {
-    setOutput((prevOutput) => prevOutput + 'Stopping node...\n');
-    const result = await props.handleNodeStop(props.selectedNode.name);
-    if (result.success) {
-      setOutput(
-        (prevOutput) => prevOutput + `Node stopped: ${result.message}\n`
-      );
-      setIsRunning(false);
+    if (isRunning) {
+      setOutput((prevOutput) => prevOutput + 'Stopping node...\n');
+      const result = await props.handleNodeStop(props.selectedNode.name);
+      if (result.success) {
+        setOutput(
+          (prevOutput) => prevOutput + `Node stopped: ${result.message}\n`
+        );
+        setIsRunning(false);
+      } else {
+        setOutput(
+          (prevOutput) =>
+            prevOutput + `Failed to stop node: ${result.message}\n`
+        );
+      }
     } else {
-      setOutput(
-        (prevOutput) => prevOutput + `Failed to stop node: ${result.message}\n`
-      );
+      setMessagePopup({
+        isOpen: true,
+        message: 'Node is not running.',
+        title: 'Node Status',
+        type: MessageType.INFO,
+      });
     }
   };
 
@@ -173,10 +199,10 @@ const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
   return (
     <ControlsContainer>
       <ButtonGroup>
-        <Button variant="start" onClick={handleStart} disabled={isRunning}>
+        <Button variant="start" onClick={handleStart}>
           Start Node
         </Button>
-        <Button variant="stop" onClick={handleStop} disabled={!isRunning}>
+        <Button variant="stop" onClick={handleStop}>
           Stop Node
         </Button>
       </ButtonGroup>
@@ -192,6 +218,13 @@ const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
           />
         </TerminalForm>
       </TerminalContainer>
+      <MessagePopup
+        isOpen={messagePopup.isOpen}
+        onClose={() => setMessagePopup((prev) => ({ ...prev, isOpen: false }))}
+        message={messagePopup.message}
+        title={messagePopup.title}
+        type={messagePopup.type}
+      />
     </ControlsContainer>
   );
 };

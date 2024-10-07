@@ -39,6 +39,8 @@ fn main() -> eyre::Result<()> {
             commands::stop_node,
             commands::send_input,
             commands::get_node_log,
+            commands::delete_node,
+            commands::open_dashboard,
         ])
         .run(tauri::generate_context!())?;
 

@@ -31,7 +31,7 @@ export interface NodePorts {
 }
 
 const useNodeManagement = () => {
-  const [nodes, setNodes] = useState<NodeDetails[]>([]);
+  const [, setNodes] = useState<NodeDetails[]>([]);
   const nodesRef = useRef<NodeDetails[]>([]);
   const [selectedNode, setSelectedNode] = useState<NodeDetails | null>(null);
 
@@ -165,8 +165,42 @@ const useNodeManagement = () => {
     }
   };
 
+  const handleNodeDelete = async (
+    nodeName: string
+  ): Promise<CommandResponse> => {
+    console.log('Deleting node:', nodeName);
+    try {
+      const result = await invoke<{ success: boolean; message: string }>(
+        'delete_node',
+        { nodeName }
+      );
+      console.log('Delete node result:', result);
+      if (result.success) {
+        await refreshNodesList();
+      }
+      return { success: result.success, message: result.message, data: null };
+    } catch (error) {
+      console.error('Error deleting node:', error);
+      return { success: false, message: `Error: ${error}`, data: null };
+    }
+  };
+
+  const handleOpenAdminDashboard = async (
+    nodeName: string
+  ): Promise<CommandResponse> => {
+    try {
+      const result = await invoke<CommandResponse>('open_dashboard', {
+        nodeName,
+      });
+      return result;
+    } catch (error) {
+      console.error('Error opening admin dashboard:', error);
+      return { success: false, message: `Error: ${error}`, data: null };
+    }
+  };
+
   return {
-    nodes,
+    nodesRef,
     selectedNode,
     setSelectedNode,
     handleNodeSelect,
@@ -175,6 +209,8 @@ const useNodeManagement = () => {
     handleNodeConfigUpdate,
     handleNodeStart,
     handleNodeStop,
+    handleNodeDelete,
+    handleOpenAdminDashboard,
     handleNodeLogs,
     handleGetNodeOutput,
   };
