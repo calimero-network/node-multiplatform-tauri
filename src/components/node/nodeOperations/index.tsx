@@ -36,7 +36,9 @@ interface NodeOperationsProps {
 }
 
 const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
-  const [activeSection, setActiveSection] = useState<SectionTypes | null>(null);
+  const [activeSection, setActiveSection] = useState<SectionTypes | null>(
+    'controls'
+  );
   const [messagePopup, setMessagePopup] = useState<MessagePopupState>({
     isOpen: false,
     message: '',

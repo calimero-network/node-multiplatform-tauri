@@ -39,8 +39,13 @@ const useNodeManagement = () => {
     try {
       const nodesStatus = await invoke<CommandResponse>('fetch_nodes');
       if (nodesStatus.success) {
-        setNodes(nodesStatus.data as NodeDetails[]);
         nodesRef.current = nodesStatus.data as NodeDetails[];
+        setNodes(nodesStatus.data as NodeDetails[]);
+        // Update selected node state
+        setSelectedNode(
+          nodesRef.current.find((node) => node.name === selectedNode?.name) ||
+            null
+        );
       } else {
         console.error('Error fetching nodes status:', nodesStatus.message);
         alert(nodesStatus.message);

@@ -9,7 +9,6 @@ use node_multiplatform_tauri::utils::setup::{
     run_nodes_on_startup, setup_app_state, setup_auto_launch, setup_store,
 };
 use tauri::{Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, WindowEvent};
-// use tray::{menu::{create_menu, handle_menu_click}, tray::{handle_tray_click, update_tray_menu}};
 
 fn main() -> eyre::Result<()> {
     let system_tray = SystemTray::new().with_menu(SystemTrayMenu::new());

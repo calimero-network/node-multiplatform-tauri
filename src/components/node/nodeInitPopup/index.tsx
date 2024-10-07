@@ -7,7 +7,7 @@ import {
   SuccessMessage,
   ErrorMessage,
 } from '../../common/popup/Styled';
-import { NodeInitializationResult } from '../../../hooks/useNodeManagement';
+import { CommandResponse } from '../../../hooks/useNodeManagement';
 
 interface NodeInitializationPopupProps {
   onInitialize: (
@@ -15,7 +15,7 @@ interface NodeInitializationPopupProps {
     serverPort: number,
     swarmPort: number,
     runOnStartup: boolean
-  ) => Promise<NodeInitializationResult>;
+  ) => Promise<CommandResponse>;
   onClose: () => void;
 }
 
