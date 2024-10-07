@@ -43,7 +43,7 @@ fn check_log_size_and_trim(file: &mut File) -> io::Result<()> {
         file.seek(SeekFrom::Start(0))?; // Reset the file cursor to the start
         let mut reader = BufReader::new(file.try_clone()?); // Clone the file for reading
         let writer = file; // Use the original file for writing
-        // Skip lines until we're within the size limit
+                           // Skip lines until we're within the size limit
         let mut current_pos = 0;
         let mut line = String::new();
         while current_pos < metadata.len() - MAX_LOG_SIZE as u64 {
@@ -66,7 +66,11 @@ pub fn get_log_file_path(app_handle: &AppHandle, node_name: &str) -> PathBuf {
 
 pub fn get_node_log_file(app_handle: &AppHandle, node_name: &str) -> Result<File, Error> {
     let log_path = get_log_file_path(app_handle, node_name);
-    OpenOptions::new().read(true).append(true).open(log_path).map_err(|e| eyre!("Failed to open log file: {}", e))
+    OpenOptions::new()
+        .read(true)
+        .append(true)
+        .open(log_path)
+        .map_err(|e| eyre!("Failed to open log file: {}", e))
 }
 
 pub fn read_log_file(state: State<'_, AppState>, node_name: &str) -> Result<String, Error> {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { invoke } from '@tauri-apps/api/tauri';
 
 export interface NodeDetails {
@@ -31,15 +31,16 @@ export interface NodePorts {
 }
 
 const useNodeManagement = () => {
-  const [nodes, setNodes] = useState<NodeDetails[] | null>(null);
+  const [, setNodes] = useState<NodeDetails[]>([]);
+  const nodesRef = useRef<NodeDetails[]>([]);
   const [selectedNode, setSelectedNode] = useState<NodeDetails | null>(null);
 
   const refreshNodesList = async () => {
     try {
       const nodesStatus = await invoke<CommandResponse>('fetch_nodes');
-      console.log('nodesStatus', nodesStatus);
       if (nodesStatus.success) {
         setNodes(nodesStatus.data as NodeDetails[]);
+        nodesRef.current = nodesStatus.data as NodeDetails[];
       } else {
         console.error('Error fetching nodes status:', nodesStatus.message);
         alert(nodesStatus.message);
@@ -55,7 +56,9 @@ const useNodeManagement = () => {
   }, []);
 
   const handleNodeSelect = (nodeName: string) => {
-    setSelectedNode(nodes?.find((node) => node.name === nodeName) || null);
+    setSelectedNode(
+      nodesRef.current.find((node) => node.name === nodeName) || null
+    );
   };
 
   const handleNodeInitialize = async (
@@ -72,7 +75,7 @@ const useNodeManagement = () => {
         runOnStartup,
       });
       if (result.success) {
-        await refreshNodesList(); // Refresh the node list and status
+        await refreshNodesList();
       }
       return {
         success: result.success,
@@ -137,7 +140,6 @@ const useNodeManagement = () => {
       const result = await invoke<CommandResponse>('get_node_log', {
         nodeName,
       });
-      console.log('result', result);
       if (result.success) {
         return result;
       } else {
@@ -163,8 +165,42 @@ const useNodeManagement = () => {
     }
   };
 
+  const handleNodeDelete = async (
+    nodeName: string
+  ): Promise<CommandResponse> => {
+    console.log('Deleting node:', nodeName);
+    try {
+      const result = await invoke<{ success: boolean; message: string }>(
+        'delete_node',
+        { nodeName }
+      );
+      console.log('Delete node result:', result);
+      if (result.success) {
+        await refreshNodesList();
+      }
+      return { success: result.success, message: result.message, data: null };
+    } catch (error) {
+      console.error('Error deleting node:', error);
+      return { success: false, message: `Error: ${error}`, data: null };
+    }
+  };
+
+  const handleOpenAdminDashboard = async (
+    nodeName: string
+  ): Promise<CommandResponse> => {
+    try {
+      const result = await invoke<CommandResponse>('open_dashboard', {
+        nodeName,
+      });
+      return result;
+    } catch (error) {
+      console.error('Error opening admin dashboard:', error);
+      return { success: false, message: `Error: ${error}`, data: null };
+    }
+  };
+
   return {
-    nodes,
+    nodesRef,
     selectedNode,
     setSelectedNode,
     handleNodeSelect,
@@ -173,6 +209,8 @@ const useNodeManagement = () => {
     handleNodeConfigUpdate,
     handleNodeStart,
     handleNodeStop,
+    handleNodeDelete,
+    handleOpenAdminDashboard,
     handleNodeLogs,
     handleGetNodeOutput,
   };

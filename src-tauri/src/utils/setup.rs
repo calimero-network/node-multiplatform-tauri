@@ -34,15 +34,15 @@ pub fn setup_store(app: &App) -> Result<Store<Wry>> {
 }
 
 pub fn setup_app_state(app_handle: AppHandle, store: Store<Wry>) -> Result<AppState> {
-  let node_manager = Arc::new(Mutex::new(NodeManager {
-      nodes: load_nodes(&app_handle)?,
-  }));
+    let node_manager = Arc::new(Mutex::new(NodeManager {
+        nodes: load_nodes(&app_handle)?,
+    }));
 
-  Ok(AppState {
-      store: Mutex::new(store),
-      app_handle,
-      node_manager,
-  })
+    Ok(AppState {
+        store: Mutex::new(store),
+        app_handle,
+        node_manager,
+    })
 }
 
 fn load_nodes(app_handle: &AppHandle) -> Result<HashMap<String, NodeProcess>> {

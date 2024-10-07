@@ -10,33 +10,53 @@ import {
   TerminalForm,
   TerminalInput,
 } from './Styled';
+import MessagePopup, {
+  MessagePopupState,
+  MessageType,
+} from '../../common/popupMessage';
 import useNodeManagement, {
   NodeDetails,
   CommandResponse,
 } from '../../../hooks/useNodeManagement';
+import { TrayAction } from '../../../pages/dashboard';
 
 interface NodeControlsProps {
   selectedNode: NodeDetails;
   handleNodeStart: (nodeName: string) => Promise<CommandResponse>;
   handleNodeStop: (nodeName: string) => Promise<CommandResponse>;
+  action: string | null;
+  setAction: (action: TrayAction | null) => void;
 }
 
-// Define a type for the event payload
 type EventPayload = string;
-
-const NodeControls: React.FC<NodeControlsProps> = ({
-  selectedNode,
-  handleNodeStart,
-  handleNodeStop,
-}) => {
+const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
   const [output, setOutput] = useState<string>('');
   const [input, setInput] = useState<string>('');
-  const [isRunning, setIsRunning] = useState<boolean>(selectedNode.is_running);
+  const [isRunning, setIsRunning] = useState<boolean>(
+    props.selectedNode.is_running
+  );
   const outputRef = useRef<HTMLPreElement>(null);
+  const [messagePopup, setMessagePopup] = useState<MessagePopupState>({
+    isOpen: false,
+    message: '',
+    title: '',
+    type: MessageType.INFO,
+  });
   const { handleGetNodeOutput } = useNodeManagement();
 
   useEffect(() => {
-    setIsRunning(selectedNode.is_running);
+    if (props.action) {
+      if (props.action === 'start') {
+        handleStart();
+      } else if (props.action === 'stop') {
+        handleStop();
+      }
+      props.setAction(null);
+    }
+  }, [props.action]);
+
+  useEffect(() => {
+    setIsRunning(props.selectedNode.is_running);
     let unsubscribe: UnlistenFn | null = null;
 
     const setupTerminalListener = async () => {
@@ -47,7 +67,7 @@ const NodeControls: React.FC<NodeControlsProps> = ({
 
       // Set up new listener
       unsubscribe = await listen(
-        `node-output-${selectedNode.name}`,
+        `node-output-${props.selectedNode.name}`,
         (event: { payload: EventPayload }) => {
           const eventData = event.payload;
           setOutput((prevOutput) => prevOutput + eventData);
@@ -61,7 +81,7 @@ const NodeControls: React.FC<NodeControlsProps> = ({
     const fetchNodeStatus = async () => {
       try {
         const currentOutput: CommandResponse = await handleGetNodeOutput(
-          selectedNode.name
+          props.selectedNode.name
         );
         if (currentOutput.success) {
           setOutput(currentOutput.data as string);
@@ -81,7 +101,7 @@ const NodeControls: React.FC<NodeControlsProps> = ({
         unsubscribe();
       }
     };
-  }, [selectedNode]);
+  }, [props.selectedNode]);
 
   useEffect(() => {
     if (outputRef.current) {
@@ -93,7 +113,7 @@ const NodeControls: React.FC<NodeControlsProps> = ({
     if (!isRunning) {
       try {
         setOutput('Starting node...\n');
-        const result = await handleNodeStart(selectedNode.name);
+        const result = await props.handleNodeStart(props.selectedNode.name);
         setOutput((prevOutput) => prevOutput + `${result.message}\n`);
         if (result.success) {
           setIsRunning(true);
@@ -114,22 +134,38 @@ const NodeControls: React.FC<NodeControlsProps> = ({
         setIsRunning(false);
       }
     } else {
+      setMessagePopup({
+        isOpen: true,
+        message: 'Node is already running.',
+        title: 'Node Status',
+        type: MessageType.INFO,
+      });
       setOutput((prevOutput) => prevOutput + 'Node is already running.\n');
     }
   };
 
   const handleStop = async () => {
-    setOutput((prevOutput) => prevOutput + 'Stopping node...\n');
-    const result = await handleNodeStop(selectedNode.name);
-    if (result.success) {
-      setOutput(
-        (prevOutput) => prevOutput + `Node stopped: ${result.message}\n`
-      );
-      setIsRunning(false);
+    if (isRunning) {
+      setOutput((prevOutput) => prevOutput + 'Stopping node...\n');
+      const result = await props.handleNodeStop(props.selectedNode.name);
+      if (result.success) {
+        setOutput(
+          (prevOutput) => prevOutput + `Node stopped: ${result.message}\n`
+        );
+        setIsRunning(false);
+      } else {
+        setOutput(
+          (prevOutput) =>
+            prevOutput + `Failed to stop node: ${result.message}\n`
+        );
+      }
     } else {
-      setOutput(
-        (prevOutput) => prevOutput + `Failed to stop node: ${result.message}\n`
-      );
+      setMessagePopup({
+        isOpen: true,
+        message: 'Node is not running.',
+        title: 'Node Status',
+        type: MessageType.INFO,
+      });
     }
   };
 
@@ -141,7 +177,10 @@ const NodeControls: React.FC<NodeControlsProps> = ({
   const sendInput = async () => {
     if (input.trim()) {
       try {
-        await invoke('send_input', { nodeName: selectedNode.name, input });
+        await invoke('send_input', {
+          nodeName: props.selectedNode.name,
+          input,
+        });
         setInput('');
       } catch (error) {
         setOutput(
@@ -160,10 +199,10 @@ const NodeControls: React.FC<NodeControlsProps> = ({
   return (
     <ControlsContainer>
       <ButtonGroup>
-        <Button variant="start" onClick={handleStart} disabled={isRunning}>
+        <Button variant="start" onClick={handleStart}>
           Start Node
         </Button>
-        <Button variant="stop" onClick={handleStop} disabled={!isRunning}>
+        <Button variant="stop" onClick={handleStop}>
           Stop Node
         </Button>
       </ButtonGroup>
@@ -179,6 +218,13 @@ const NodeControls: React.FC<NodeControlsProps> = ({
           />
         </TerminalForm>
       </TerminalContainer>
+      <MessagePopup
+        isOpen={messagePopup.isOpen}
+        onClose={() => setMessagePopup((prev) => ({ ...prev, isOpen: false }))}
+        message={messagePopup.message}
+        title={messagePopup.title}
+        type={messagePopup.type}
+      />
     </ControlsContainer>
   );
 };
