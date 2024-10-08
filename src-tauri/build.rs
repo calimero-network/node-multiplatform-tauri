@@ -1,5 +1,4 @@
-use dotenv::dotenv;
-use eyre::{eyre, Result};
+use eyre::{bail, Result};
 use flate2::read::GzDecoder;
 use reqwest::get;
 use std::env;
@@ -17,10 +16,7 @@ fn main() {
 }
 
 pub async fn setup_binary() -> Result<()> {
-    dotenv().expect("Failed to load .env file");
-
-    let target =
-        std::env::var("BINARY_TARGET").expect("BINARY_TARGET environment variable not set");
+    let target = determine_target();
     let binary_name = "meroctl";
     let cache_dir = std::env::temp_dir().join("meroctl");
     std::fs::create_dir_all(&cache_dir).expect("Failed to create cache directory");
@@ -51,10 +47,7 @@ pub async fn setup_binary() -> Result<()> {
         .expect("Failed to read file header");
 
     if &header != b"\x1f\x8b" {
-        return Err(eyre!(
-            "Invalid gzip header for file: {}",
-            binary_path.display()
-        ));
+        bail!("Invalid gzip header for file: {}", binary_path.display());
     }
 
     let tar_gz = File::open(&binary_path).expect("Failed to open .gz file");
@@ -65,4 +58,40 @@ pub async fn setup_binary() -> Result<()> {
     archive.unpack(&bin_dir).expect("Failed to unpack archive");
 
     Ok(())
+}
+
+fn determine_target() -> String {
+    // Check if --target flag is provided
+    if let Ok(target) = env::var("CARGO_BUILD_TARGET") {
+        return map_target_to_binary_name(&target);
+    }
+
+    // Fallback to current OS and architecture
+    let os = env::consts::OS;
+    let arch = env::consts::ARCH;
+    map_os_arch_to_binary_name(os, arch)
+}
+
+fn map_target_to_binary_name(target: &str) -> String {
+    match target {
+        "x86_64-pc-windows-msvc" => "meroctl_x86_64-pc-windows-msvc",
+        "x86_64-apple-darwin" => "meroctl_x86_64-apple-darwin",
+        "aarch64-apple-darwin" => "meroctl_aarch64-apple-darwin",
+        "x86_64-unknown-linux-gnu" => "meroctl_x86_64-unknown-linux-gnu",
+        // Add more mappings as needed
+        _ => panic!("Unsupported target: {}", target),
+    }
+    .to_string()
+}
+
+fn map_os_arch_to_binary_name(os: &str, arch: &str) -> String {
+    match (os, arch) {
+        ("windows", "x86_64") => "meroctl-x86_64-pc-windows-msvc",
+        ("macos", "x86_64") => "meroctl_x86_64-apple-darwin",
+        ("macos", "aarch64") => "meroctl_aarch64-apple-darwin",
+        ("linux", "x86_64") => "meroctl_x86_64-unknown-linux-gnu",
+        // Add more combinations as needed
+        _ => panic!("Unsupported OS/architecture combination: {}/{}", os, arch),
+    }
+    .to_string()
 }

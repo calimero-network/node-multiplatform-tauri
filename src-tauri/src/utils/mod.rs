@@ -129,7 +129,7 @@ fn extract_port(config: &Value, key: &str) -> Result<u16> {
         }
     }
 
-    Err(eyre!("Failed to extract {} port", key))
+    bail!("Failed to extract {} port", key);
 }
 
 // Helper function to escape special regex characters
