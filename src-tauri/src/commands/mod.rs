@@ -1,9 +1,10 @@
 use tauri::State;
 
 use crate::{
+    logger::read_log_file,
     operations::{
-        create_node, get_node_output, get_nodes, send_input_to_node, start_node as start,
-        stop_node_process, update_node_config,
+        create_node, delete_node as delete, get_node_output, get_nodes, open_admin_dashboard,
+        send_input_to_node, start_node as start, stop_node_process, update_node_config,
     },
     types::{AppState, NodeInfo, OperationResult},
 };
@@ -170,6 +171,68 @@ pub async fn send_input(
         Ok(false) => Ok(OperationResult {
             success: false,
             message: "Input sending failed".to_string(),
+            data: None,
+        }),
+        Err(e) => Ok(OperationResult {
+            success: false,
+            message: e.to_string(),
+            data: None,
+        }),
+    }
+}
+
+#[tauri::command]
+pub async fn get_node_log(
+    state: State<'_, AppState>,
+    node_name: String,
+) -> Result<OperationResult<String>, String> {
+    match read_log_file(state, &node_name) {
+        Ok(log) => Ok(OperationResult {
+            success: true,
+            message: "Node log fetched successfully".to_string(),
+            data: Some(log),
+        }),
+        Err(e) => Ok(OperationResult {
+            success: false,
+            message: e.to_string(),
+            data: None,
+        }),
+    }
+}
+
+#[tauri::command]
+pub async fn delete_node(
+    state: State<'_, AppState>,
+    node_name: String,
+) -> Result<OperationResult, String> {
+    match delete(state, node_name).await {
+        Ok(true) => Ok(OperationResult {
+            success: true,
+            message: "Node deleted successfully".to_string(),
+            data: None,
+        }),
+        Ok(false) => Ok(OperationResult {
+            success: false,
+            message: "Node deletion failed".to_string(),
+            data: None,
+        }),
+        Err(e) => Ok(OperationResult {
+            success: false,
+            message: e.to_string(),
+            data: None,
+        }),
+    }
+}
+
+#[tauri::command]
+pub async fn open_dashboard(
+    state: State<'_, AppState>,
+    node_name: String,
+) -> Result<OperationResult, String> {
+    match open_admin_dashboard(state.app_handle.clone(), node_name) {
+        Ok(_) => Ok(OperationResult {
+            success: true,
+            message: "Dashboard opened successfully".to_string(),
             data: None,
         }),
         Err(e) => Ok(OperationResult {

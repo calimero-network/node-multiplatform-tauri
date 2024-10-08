@@ -1,11 +1,13 @@
 use crate::{
+    logger::{create_log_file, write_to_log},
     store::{get_run_node_on_startup, update_run_node_on_startup},
+    tray::update_tray_menu,
     types::{AppState, NodeInfo, NodeProcess},
     utils::{
-        check_ports_availability, get_binary_path, get_node_ports, get_nodes_dir,
-        is_node_process_running, kill_node_process, strip_ansi_escapes,
+        check_ports_availability, get_binary_path, get_node_ports, get_nodes_dir, is_node_process_running, is_port_in_use, kill_node_process, strip_ansi_escapes
     },
 };
+use chrono::Local;
 use eyre::{eyre, Result};
 use multiaddr::{Multiaddr, Protocol};
 use serde_json::Value;
@@ -17,8 +19,8 @@ use std::{
     process::{Command, Stdio},
     sync::{mpsc, Arc, Mutex},
 };
-use tauri::Manager;
 use tauri::State;
+use tauri::{AppHandle, Manager};
 
 pub async fn create_node(
     state: State<'_, AppState>,
@@ -26,7 +28,7 @@ pub async fn create_node(
     server_port: u32,
     swarm_port: u32,
     run_on_startup: bool,
-) -> Result<bool, eyre::Error> {
+) -> Result<bool> {
     let nodes_dir = get_nodes_dir(&state.app_handle);
     fs::create_dir_all(&nodes_dir).map_err(|e| eyre!("Failed to create nodes directory: {}", e))?;
 
@@ -52,7 +54,42 @@ pub async fn create_node(
         return Ok(false);
     }
 
+    let mut log_file = create_log_file(&state.app_handle, &node_name)
+        .map_err(|e| eyre!("Failed to create log file: {}", e))?;
+    // Write stdout and stderr to log
+    write_to_log(
+        &mut log_file,
+        &strip_ansi_escapes(&String::from_utf8_lossy(&output.stdout)),
+    )
+    .map_err(|e| eyre!("Failed to log node stdout: {}", e))?;
+    write_to_log(
+        &mut log_file,
+        &strip_ansi_escapes(&String::from_utf8_lossy(&output.stderr)),
+    )
+    .map_err(|e| eyre!("Failed to log node stderr: {}", e))?;
+
     update_run_node_on_startup(&state, &node_name, run_on_startup)?;
+
+    {
+        // Add the node to the AppState
+        let mut manager = state
+            .node_manager
+            .lock()
+            .map_err(|e| eyre!("Failed to lock node manager: {}", e))?;
+
+        manager.nodes.insert(
+            node_name.clone(),
+            NodeProcess {
+                process: None, // Not running initially
+                stdin: None,
+                output: Arc::new(Mutex::new(String::new())),
+                log_file: Some(log_file),
+            },
+        );
+    } // The mutable borrow ends here
+
+    // Call update_tray_menu after the mutable borrow is done
+    update_tray_menu(state)?;
 
     Ok(true)
 }
@@ -67,13 +104,18 @@ pub fn get_nodes(state: State<'_, AppState>) -> Result<Vec<NodeInfo>> {
         if let Some(node_name) = entry.file_name().to_str() {
             let node_name = node_name.to_owned();
             if let Ok(config) = get_node_ports(&node_name, &state.app_handle) {
-                let is_running = is_node_process_running(&node_name)?;
+                let (is_running, external_node) = match is_node_process_running(&state.app_handle, &node_name) {
+                    Ok(true) => (true, false),
+                    Ok(false) => (false, false),
+                    Err(_) => (false, true), // Assume running if there's an error
+                };
                 let run_on_startup = get_run_node_on_startup(&state, &node_name)?;
                 nodes.push(NodeInfo {
                     name: node_name,
                     is_running,
                     run_on_startup,
                     node_ports: config,
+                    external_node,
                 });
             }
         }
@@ -133,6 +175,12 @@ pub async fn update_node_config(
     update_run_node_on_startup(&state, &node_name, run_on_startup)
         .map_err(|e| eyre!("Failed to update option to run node on startup: {}", e))?;
 
+    // let timestamp = Local::now().format("%Y-%m-%dT%H:%M:%S.%6fZ");
+    // write_to_log(
+    //     &state.app_handle,
+    //     &format!("{} Node '{}' configuration updated successfully.", timestamp, node_name),
+    // )?;
+
     Ok(true)
 }
 
@@ -184,14 +232,16 @@ fn change_port_in_path(address: &str, new_port: &str) -> Result<String> {
 pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result<bool> {
     let app_handle = state.app_handle.clone();
     let node_manager = state.node_manager.clone();
-
     let mut manager = node_manager
         .lock()
         .map_err(|e| eyre!("Failed to lock node manager: {}", e))?;
 
-    if manager.nodes.contains_key(&node_name) {
-        return Ok(false);
-    }
+    // Update the NodeManager with the new node process
+    let log_file = manager
+        .nodes
+        .get_mut(&node_name)
+        .and_then(|n| n.log_file.take())
+        .ok_or_else(|| eyre!("Failed to get log file: {}", node_name))?;
 
     let config = get_node_ports(&node_name, &app_handle)?;
     check_ports_availability(&config)?;
@@ -231,12 +281,26 @@ pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result
         .take()
         .ok_or_else(|| eyre!("Failed to capture stderr".to_string()))?;
 
-    // Spawn a  thread to handle stdin
+    // Clone the log_file to ensure it has a 'static lifetime
+    let log_file_clone_for_stdin = log_file
+        .try_clone()
+        .map_err(|e| eyre!("Failed to clone log file for stdin: {}", e))?;
+    let log_file_clone_for_stdout = log_file
+        .try_clone()
+        .map_err(|e| eyre!("Failed to clone log file for stdout: {}", e))?;
+
+    // Spawn a thread to handle stdin
     std::thread::spawn({
         let node_name = node_name.clone();
+        let mut log_file = log_file_clone_for_stdin;
         move || {
             let mut stdin = stdin;
             for input in rx {
+                if let Err(e) = write_to_log(&mut log_file, &format!("STDIN: {}", input)) {
+                    eprintln!("Failed to log input for node {}: {}", node_name, e);
+                    return; // Exit the closure early if logging fails
+                }
+
                 if writeln!(stdin, "{}", input).is_err() {
                     eprintln!("Failed to write to stdin for node: {}", node_name);
                     break;
@@ -250,12 +314,13 @@ pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result
         let output = Arc::clone(&output);
         let node_name = node_name.clone();
         let app_handle = app_handle.clone();
+        let mut log_file = log_file_clone_for_stdout; // Use the cloned log file
 
         move || {
             let stdout_reader = BufReader::new(stdout);
             let stderr_reader = BufReader::new(stderr);
 
-            let process_line = |line: std::io::Result<String>| -> Result<()> {
+            let mut process_line = |line: std::io::Result<String>| -> Result<()> {
                 let l = line.map_err(|e| eyre!("Failed to read line: {}", e))?;
                 let cleaned_line = strip_ansi_escapes(&l);
 
@@ -266,6 +331,8 @@ pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result
                     output_lock.push_str(&cleaned_line);
                     output_lock.push('\n');
                 }
+                write_to_log(&mut log_file, &cleaned_line)
+                    .map_err(|e| eyre!("Failed to log output: {}", e))?;
                 // Ensure the emitted event name and data format are correct
                 app_handle
                     .emit_all(&format!("node-output-{}", node_name), cleaned_line + "\n")
@@ -288,8 +355,11 @@ pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result
         process: Some(process),
         stdin: Some(tx),
         output,
+        log_file: Some(log_file), // Use the original log file here
     };
     manager.nodes.insert(node_name.clone(), node_process);
+
+    update_tray_menu(state)?;
 
     Ok(true)
 }
@@ -315,7 +385,7 @@ pub fn get_node_output(state: State<'_, AppState>, node_name: String) -> Result<
 }
 
 pub async fn stop_node_process(state: State<'_, AppState>, node_name: String) -> Result<bool> {
-    if !is_node_process_running(&node_name)? {
+    if !is_node_process_running(&state.app_handle, &node_name)? {
         return Ok(false);
     }
 
@@ -324,7 +394,7 @@ pub async fn stop_node_process(state: State<'_, AppState>, node_name: String) ->
             .node_manager
             .lock()
             .map_err(|e| eyre!("Failed to lock node manager: {}", e))?;
-        if let Some(mut node_process) = manager.nodes.remove(&node_name) {
+        if let Some(node_process) = manager.nodes.get_mut(&node_name) {
             if let Some(mut process) = node_process.process.take() {
                 break 'done process.kill().is_ok();
             }
@@ -335,6 +405,34 @@ pub async fn stop_node_process(state: State<'_, AppState>, node_name: String) ->
     if !node_stopped {
         kill_node_process(&node_name).map_err(|e| eyre!("Failed to stop node: {}", e))?;
     }
+
+    {
+        let mut manager = state
+            .node_manager
+            .lock()
+            .map_err(|e| eyre!("Failed to lock node manager: {}", e))?;
+        if let Some(node_process) = manager.nodes.get_mut(&node_name) {
+            // Set process, stdin, and output to None
+            node_process.process = None;
+            node_process.stdin = None;
+            node_process.output = Arc::new(Mutex::new(String::new()));
+
+            if let Some(log_file) = node_process.log_file.as_mut() {
+                let timestamp = Local::now().format("%Y-%m-%dT%H:%M:%S.%6fZ");
+                write_to_log(
+                    log_file,
+                    &format!(
+                        "{} Node '{}' has been stopped successfully.",
+                        timestamp, node_name
+                    ),
+                )
+                .map_err(|e| eyre!("Failed to log node stop: {}", e))?;
+            }
+        }
+    } // The mutable borrow ends here
+
+    // Call update_tray_menu after the mutable borrow is done
+    update_tray_menu(state)?;
 
     Ok(true)
 }
@@ -362,4 +460,115 @@ pub fn send_input_to_node(
         .send(input)
         .map_err(|e| eyre!("Failed to send input: {}", e))?;
     Ok(true)
+}
+
+pub async fn delete_node(state: State<'_, AppState>, node_name: String) -> Result<bool> {
+    let nodes_dir = get_nodes_dir(&state.app_handle);
+    let node_dir = nodes_dir.join(&node_name);
+
+    if !node_dir.exists() {
+        return Ok(false);
+    }
+
+    // Ensure the node is not running
+    if is_node_process_running(&state.app_handle, &node_name)? {
+        return Ok(false);
+    }
+
+    // Delete the node directory
+    fs::remove_dir_all(&node_dir).map_err(|e| eyre!("Failed to delete node directory: {}", e))?;
+
+    // Remove from run_on_startup if present
+    {
+        let mut store = state
+            .store
+            .lock()
+            .map_err(|e| eyre!("Failed to lock store: {}", e))?;
+        let key = format!("{}_run_on_startup", node_name);
+        if store.get(&key).is_some() {
+            store
+                .delete(&key)
+                .map_err(|e| eyre!("Failed to delete key: {}", e))?;
+            store
+                .save()
+                .map_err(|e| eyre!("Failed to save store: {}", e))?;
+        }
+    }
+
+    // Remove from app state
+    {
+        let mut app_state = state
+            .node_manager
+            .lock()
+            .map_err(|e| eyre!("Failed to lock app state: {}", e))?;
+        app_state.nodes.remove(&node_name);
+    }
+
+    // Update tray menu
+    update_tray_menu(state)?;
+
+    Ok(true)
+}
+
+pub fn open_admin_dashboard(app_handle: AppHandle, node_name: String) -> Result<bool> {
+    let config = get_node_ports(&node_name, &app_handle)?;
+    let url = format!("http://localhost:{}/admin-dashboard", config.server_port);
+
+    let (cmd, args) = if cfg!(target_os = "windows") {
+        ("cmd", vec!["/C", "start", url.as_str()])
+    } else if cfg!(target_os = "macos") {
+        ("open", vec![url.as_str()])
+    } else {
+        ("xdg-open", vec![url.as_str()])
+    };
+
+    Command::new(cmd)
+        .args(args)
+        .spawn()
+        .map_err(|e| eyre!("Failed to open URL: {}", e))?;
+
+    Ok(true)
+}
+
+pub async fn start_nodes_on_startup(state: State<'_, AppState>) -> Result<()> {
+    let nodes_to_start = {
+        let store = state.store.lock().map_err(|e| eyre!("Failed to lock store: {}", e))?;
+        store.keys()
+            .filter(|key| key.ends_with("_run_on_startup"))
+            .filter_map(|key| {
+                if let Some(Value::Bool(true)) = store.get(&key) {
+                    Some(key.trim_end_matches("_run_on_startup").to_string())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<String>>()
+    };
+
+    for node_name in nodes_to_start {
+        let node_config = get_node_ports(&node_name, &state.app_handle)?;
+        if !is_port_in_use(node_config.server_port) && !is_port_in_use(node_config.swarm_port) {
+            start_node(state.clone(), node_name).await?;
+        }
+    }
+    Ok(())
+}
+
+pub async fn stop_all_nodes(state: State<'_, AppState>) -> Result<()> {
+    let node_names: Vec<String> = {
+        let manager = state
+            .node_manager
+            .lock()
+            .map_err(|e| eyre!("Failed to lock store: {}", e))?;
+        manager.nodes.keys().cloned().collect()
+    };
+
+    for node_name in node_names {
+        match stop_node_process(state.clone(), node_name.clone()).await {
+            Ok(_) => println!("Successfully stopped node: {}", node_name),
+            Err(e) => eprintln!("Failed to stop node {}: {:?}", node_name, e),
+        }
+    }
+
+    Ok(())
 }
