@@ -4,6 +4,7 @@ import PopupWrapper from '../popup';
 import {
   MessageContent,
   MessagePopupButtons,
+  ButtonWrapper,
   MessageText,
   MessageTitle,
 } from './Styled';
@@ -14,6 +15,9 @@ interface MessagePopupProps {
   message: string;
   title: string;
   type: MessageType;
+  isExternalNode?: boolean;
+  setSelectedNode?: () => void;
+  refreshNodesList?: () => void;
 }
 
 export enum MessageType {
@@ -30,18 +34,46 @@ export type MessagePopupState = {
 };
 
 const MessagePopup: React.FC<MessagePopupProps> = ({ ...props }) => {
+
+  const closePopup = () => {
+    props.onClose();
+    // If node is external, we need to disable the selected node operations
+    if (props.isExternalNode && props.setSelectedNode) {
+      props.setSelectedNode();
+    }
+  };
+
+  const handleRefreshNodesList = () => {
+    if (props.refreshNodesList) {
+      props.refreshNodesList();
+      closePopup();
+    }
+  };
+
   return (
-    <PopupWrapper isOpen={props.isOpen} onClose={props.onClose}>
+    <PopupWrapper isOpen={props.isOpen} onClose={closePopup}>
       <MessageContent>
         <MessageTitle>{props.title}</MessageTitle>
         <MessageText>{props.message}</MessageText>
         <MessagePopupButtons>
-          <Button
-            onClick={props.onClose}
-            variant={props.type === MessageType.ERROR ? 'stop' : 'start'}
-          >
-            OK
-          </Button>
+          <ButtonWrapper>
+            <Button
+              onClick={() => closePopup()}
+              variant={props.type === MessageType.ERROR ? 'stop' : 'start'}
+            >
+              {props.type === MessageType.ERROR ? 'Close' : 'OK'}
+            </Button>
+          </ButtonWrapper>
+          {props.isExternalNode && (
+            <ButtonWrapper>
+              <Button
+                onClick={() => handleRefreshNodesList()}
+                variant={'start'}
+              >
+                Refresh
+              </Button>
+            </ButtonWrapper>
+          )}
         </MessagePopupButtons>
       </MessageContent>
     </PopupWrapper>

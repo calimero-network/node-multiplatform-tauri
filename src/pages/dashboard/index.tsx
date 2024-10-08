@@ -41,6 +41,7 @@ const Dashboard: React.FC = () => {
     handleNodeStop,
     handleNodeDelete,
     handleOpenAdminDashboard,
+    refreshNodesList,
   } = useNodeManagement();
 
   const nodes = nodesRef.current;
@@ -97,6 +98,7 @@ const Dashboard: React.FC = () => {
               handleNodeSelect={handleNodeSelect}
               trayAction={trayAction}
               setTrayAction={setTrayAction}
+              refreshNodesList={refreshNodesList}
             />
           )}
         </ContentArea>

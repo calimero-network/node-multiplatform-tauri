@@ -1,4 +1,4 @@
-use eyre::{eyre, Result};
+use eyre::{bail, eyre, Result};
 use lazy_static::lazy_static;
 use multiaddr::{Multiaddr, Protocol};
 use serde_json::Value;
@@ -54,7 +54,7 @@ pub fn get_binary_path(app_handle: &AppHandle) -> Result<PathBuf> {
     }
 }
 
-pub fn is_node_process_running(node_name: &str) -> Result<bool> {
+pub fn is_node_process_running(app_handle: &AppHandle, node_name: &str) -> Result<bool> {
     let system = System::new_with_specifics(
         RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
     );
@@ -65,7 +65,7 @@ pub fn is_node_process_running(node_name: &str) -> Result<bool> {
     );
     let re = Regex::new(&pattern).map_err(|e| eyre!("Failed to create regex: {}", e))?;
 
-    Ok(system.processes().values().any(|process| {
+    for process in system.processes().values() {
         let cmd = process
             .cmd()
             .iter()
@@ -73,8 +73,22 @@ pub fn is_node_process_running(node_name: &str) -> Result<bool> {
             .collect::<Vec<&str>>()
             .join(" ");
 
-        re.is_match(&cmd)
-    }))
+        if re.is_match(&cmd) {
+            // Print the location of the process's executable
+            if let Some(exe_path) = process.exe() {
+                let binary_path = get_binary_path(app_handle)?;
+                if binary_path.as_path() != exe_path {
+                    bail!(
+                        "Node with name {} is already running outside of the application",
+                        node_name
+                    );
+                }
+                return Ok(true);
+            }
+        }
+    }
+
+    Ok(false)
 }
 
 pub fn get_node_ports(node_name: &str, app_handle: &AppHandle) -> Result<NodeConfig> {

@@ -4,8 +4,7 @@ use crate::{
     tray::update_tray_menu,
     types::{AppState, NodeInfo, NodeProcess},
     utils::{
-        check_ports_availability, get_binary_path, get_node_ports, get_nodes_dir,
-        is_node_process_running, kill_node_process, strip_ansi_escapes,
+        check_ports_availability, get_binary_path, get_node_ports, get_nodes_dir, is_node_process_running, is_port_in_use, kill_node_process, strip_ansi_escapes
     },
 };
 use chrono::Local;
@@ -105,13 +104,18 @@ pub fn get_nodes(state: State<'_, AppState>) -> Result<Vec<NodeInfo>> {
         if let Some(node_name) = entry.file_name().to_str() {
             let node_name = node_name.to_owned();
             if let Ok(config) = get_node_ports(&node_name, &state.app_handle) {
-                let is_running = is_node_process_running(&node_name)?;
+                let (is_running, external_node) = match is_node_process_running(&state.app_handle, &node_name) {
+                    Ok(true) => (true, false),
+                    Ok(false) => (false, false),
+                    Err(_) => (false, true), // Assume running if there's an error
+                };
                 let run_on_startup = get_run_node_on_startup(&state, &node_name)?;
                 nodes.push(NodeInfo {
                     name: node_name,
                     is_running,
                     run_on_startup,
                     node_ports: config,
+                    external_node,
                 });
             }
         }
@@ -381,7 +385,7 @@ pub fn get_node_output(state: State<'_, AppState>, node_name: String) -> Result<
 }
 
 pub async fn stop_node_process(state: State<'_, AppState>, node_name: String) -> Result<bool> {
-    if !is_node_process_running(&node_name)? {
+    if !is_node_process_running(&state.app_handle, &node_name)? {
         return Ok(false);
     }
 
@@ -467,7 +471,7 @@ pub async fn delete_node(state: State<'_, AppState>, node_name: String) -> Resul
     }
 
     // Ensure the node is not running
-    if is_node_process_running(&node_name)? {
+    if is_node_process_running(&state.app_handle, &node_name)? {
         return Ok(false);
     }
 
@@ -524,4 +528,47 @@ pub fn open_admin_dashboard(app_handle: AppHandle, node_name: String) -> Result<
         .map_err(|e| eyre!("Failed to open URL: {}", e))?;
 
     Ok(true)
+}
+
+pub async fn start_nodes_on_startup(state: State<'_, AppState>) -> Result<()> {
+    let nodes_to_start = {
+        let store = state.store.lock().map_err(|e| eyre!("Failed to lock store: {}", e))?;
+        store.keys()
+            .filter(|key| key.ends_with("_run_on_startup"))
+            .filter_map(|key| {
+                if let Some(Value::Bool(true)) = store.get(&key) {
+                    Some(key.trim_end_matches("_run_on_startup").to_string())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<String>>()
+    };
+
+    for node_name in nodes_to_start {
+        let node_config = get_node_ports(&node_name, &state.app_handle)?;
+        if !is_port_in_use(node_config.server_port) && !is_port_in_use(node_config.swarm_port) {
+            start_node(state.clone(), node_name).await?;
+        }
+    }
+    Ok(())
+}
+
+pub async fn stop_all_nodes(state: State<'_, AppState>) -> Result<()> {
+    let node_names: Vec<String> = {
+        let manager = state
+            .node_manager
+            .lock()
+            .map_err(|e| eyre!("Failed to lock store: {}", e))?;
+        manager.nodes.keys().cloned().collect()
+    };
+
+    for node_name in node_names {
+        match stop_node_process(state.clone(), node_name.clone()).await {
+            Ok(_) => println!("Successfully stopped node: {}", node_name),
+            Err(e) => eprintln!("Failed to stop node {}: {:?}", node_name, e),
+        }
+    }
+
+    Ok(())
 }

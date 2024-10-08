@@ -4,6 +4,7 @@ import { invoke } from '@tauri-apps/api/tauri';
 export interface NodeDetails {
   name: string;
   is_running: boolean;
+  external_node: boolean;
   run_on_startup: boolean;
   node_ports: {
     server_port: number;
@@ -39,8 +40,8 @@ const useNodeManagement = () => {
     try {
       const nodesStatus = await invoke<CommandResponse>('fetch_nodes');
       if (nodesStatus.success) {
-        setNodes(nodesStatus.data as NodeDetails[]);
         nodesRef.current = nodesStatus.data as NodeDetails[];
+        setNodes(nodesStatus.data as NodeDetails[]);
       } else {
         console.error('Error fetching nodes status:', nodesStatus.message);
         alert(nodesStatus.message);

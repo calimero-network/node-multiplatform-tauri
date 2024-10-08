@@ -7,23 +7,28 @@ use tauri::{
     SystemTraySubmenu,
 };
 
+pub mod menu;
+
 pub fn update_tray_menu(state: State<'_, AppState>) -> Result<(), eyre::Report> {
     let app_handle = state.app_handle.clone();
     let nodes = get_nodes(state)?;
     let menu = match nodes.len() {
         0 => build_empty_node_menu()?,
-        1 => build_single_node_menu(&nodes[0].name)?,
-        _ => build_multi_node_menu(&nodes)?,
+        1 => build_single_node_menu(&app_handle, &nodes[0].name)?,
+        _ => build_multi_node_menu(&app_handle, &nodes)?,
     };
 
     app_handle.tray_handle().set_menu(menu)?;
     Ok(())
 }
 
-fn build_single_node_menu(node: &str) -> Result<SystemTrayMenu, eyre::Report> {
-    let is_running = is_node_process_running(node)?;
-    let status_icon = if is_running { "🟢" } else { "🔴" };
-
+fn build_single_node_menu(app_handle: &AppHandle, node: &str) -> Result<SystemTrayMenu, eyre::Report> {
+    // Initialize status_icon and is_running based on the node's running status
+    let (status_icon, is_running) = match is_node_process_running(app_handle, node) {
+        Ok(true) => ("🟢", true),
+        Ok(false) => ("🔴", false),
+        Err(_) => ("⚠️", true),
+    };
     let mut menu = SystemTrayMenu::new();
     menu = menu
         .add_item(CustomMenuItem::new(
@@ -47,12 +52,16 @@ fn build_empty_node_menu() -> Result<SystemTrayMenu, eyre::Report> {
         .add_item(CustomMenuItem::new("quit".to_string(), "Quit")))
 }
 
-fn build_multi_node_menu(nodes: &Vec<NodeInfo>) -> Result<SystemTrayMenu, eyre::Report> {
+fn build_multi_node_menu(app_handle: &AppHandle, nodes: &Vec<NodeInfo>) -> Result<SystemTrayMenu, eyre::Report> {
     let mut menu = SystemTrayMenu::new();
 
     for node in nodes {
-        let is_running = is_node_process_running(&node.name)?;
-        let status_icon = if is_running { "🟢" } else { "🔴" };
+        // Initialize status_icon and is_running based on the node's running status
+        let (status_icon, is_running) = match is_node_process_running(app_handle, &node.name) {
+            Ok(true) => ("🟢", true),
+            Ok(false) => ("🔴", false),
+            Err(_) => ("⚠️", true),
+        };
         let node_menu = add_node_items(SystemTrayMenu::new(), &node.name, is_running)?;
         menu = menu.add_submenu(SystemTraySubmenu::new(
             format!("{} {}", status_icon, node.name),

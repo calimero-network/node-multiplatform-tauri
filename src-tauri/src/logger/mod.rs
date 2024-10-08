@@ -43,7 +43,7 @@ fn check_log_size_and_trim(file: &mut File) -> io::Result<()> {
         file.seek(SeekFrom::Start(0))?; // Reset the file cursor to the start
         let mut reader = BufReader::new(file.try_clone()?); // Clone the file for reading
         let writer = file; // Use the original file for writing
-                           // Skip lines until we're within the size limit
+        // Skip lines until we're within the size limit
         let mut current_pos = 0;
         let mut line = String::new();
         while current_pos < metadata.len() - MAX_LOG_SIZE as u64 {
