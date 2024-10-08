@@ -1,7 +1,7 @@
 use crate::types::AppState;
 use crate::utils::get_nodes_dir;
 use std::fs::{self, File, OpenOptions};
-use std::io::{self, BufRead, BufReader, Seek, SeekFrom, Write};
+use std::io::{self, BufRead, BufReader, Read, Seek, SeekFrom, Write};
 use std::path::PathBuf;
 
 use eyre::{eyre, Error, Result};
@@ -40,26 +40,30 @@ fn check_log_size_and_trim(file: &mut File) -> io::Result<()> {
     let metadata = file.metadata()?;
 
     if metadata.len() > MAX_LOG_SIZE as u64 {
-        file.seek(SeekFrom::Start(0))?; // Reset the file cursor to the start
-        let mut reader = BufReader::new(file.try_clone()?); // Clone the file for reading
-        let writer = file; // Use the original file for writing
-        // Skip lines until we're within the size limit
-        let mut current_pos = 0;
-        let mut line = String::new();
-        while current_pos < metadata.len() - MAX_LOG_SIZE as u64 {
-            let bytes_read = reader.read_line(&mut line)?;
-            current_pos += bytes_read as u64;
-            line.clear();
-        }
+        let excess_bytes = metadata.len() - MAX_LOG_SIZE as u64;
+        
+        // Seek to the position where we want to start keeping data
+        file.seek(SeekFrom::Start(excess_bytes))?;
+        
+        let mut reader = BufReader::new(file.try_clone()?);
+        
+        // Discard the first line (which might be partial)
+        let mut partial_line = String::new();
+        reader.read_line(&mut partial_line)?;
+
+        // Read the remaining content
+        let mut content = Vec::new();
+        reader.read_to_end(&mut content)?;
 
         // Truncate the file and write the remaining content
-        writer.set_len(0)?;
-        writer.seek(SeekFrom::Start(0))?;
-        io::copy(&mut reader, writer)?;
+        file.set_len(0)?;
+        file.seek(SeekFrom::Start(0))?;
+        file.write_all(&content)?;
     }
 
     Ok(())
 }
+
 pub fn get_log_file_path(app_handle: &AppHandle, node_name: &str) -> PathBuf {
     get_nodes_dir(app_handle).join(node_name).join("node.log")
 }
