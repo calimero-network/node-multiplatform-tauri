@@ -7,26 +7,18 @@ import {
   Notice,
   StatusIcon,
 } from './Styled';
-
-interface NodeStatus {
-  name: string;
-  is_running: boolean;
-  node_ports: {
-    server_port: number;
-    swarm_port: number;
-  };
-}
+import { NodeDetails } from '../../../hooks/useNodeManagement';
 
 interface NodeListProps {
-  nodes: NodeStatus[] | null;
-  selectedNode: string | null;
-  onNodeSelect: (nodeName: string) => void;
+  nodes: NodeDetails[];
+  selectedNode: NodeDetails | null;
+  handleNodeSelect: (nodeName: string) => void;
 }
 
 const NodeList: React.FC<NodeListProps> = ({
   nodes,
   selectedNode,
-  onNodeSelect,
+  handleNodeSelect,
 }) => {
   return (
     <NodeListContainer>
@@ -38,10 +30,10 @@ const NodeList: React.FC<NodeListProps> = ({
             {nodes.map((node) => (
               <NodeListItem
                 key={node.name}
-                selected={node.name === selectedNode}
-                onClick={() => onNodeSelect(node.name)}
+                selected={node.name === selectedNode?.name}
+                onClick={() => handleNodeSelect(node.name)}
               >
-                <StatusIcon $isRunning={node.is_running} />
+                <StatusIcon $isRunning={node.is_running} $isExternal={node.external_node} />
                 {node.name}
               </NodeListItem>
             ))}

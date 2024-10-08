@@ -11,11 +11,7 @@ export const Label = styled.label`
   color: #ffffff;
 `;
 
-interface InputProps {
-  error?: boolean;
-}
-
-export const StyledInput = styled.input<InputProps>`
+export const StyledInput = styled.input<{ $hasError?: boolean }>`
   width: 100%;
   height: 40px;
   padding: 0 12px;
@@ -52,9 +48,9 @@ export const StyledInput = styled.input<InputProps>`
   }
 
   ${(props) =>
-    props.error &&
+    props.$hasError &&
     css`
-      border-color: #e74c3c;
+      border-color: red;
 
       &:focus {
         box-shadow: 0 0 0 0.2rem rgba(231, 76, 60, 0.25);

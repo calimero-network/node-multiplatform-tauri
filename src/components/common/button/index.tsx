@@ -1,7 +1,13 @@
 import React from 'react';
 import { StyledButton } from './Styled';
 
-type ButtonVariant = 'start' | 'stop' | 'configure' | 'delete' | 'logs' | 'controls';
+type ButtonVariant =
+  | 'start'
+  | 'stop'
+  | 'configure'
+  | 'delete'
+  | 'logs'
+  | 'controls';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;

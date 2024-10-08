@@ -2,7 +2,12 @@ use eyre::{bail, eyre, Result};
 use lazy_static::lazy_static;
 use multiaddr::{Multiaddr, Protocol};
 use serde_json::Value;
-use std::path::PathBuf;
+use std::{
+    net::{SocketAddr, TcpStream},
+    path::PathBuf,
+    process::Command,
+    time::Duration,
+};
 use sysinfo::{ProcessRefreshKind, RefreshKind, System};
 use tauri::regex::Regex;
 
@@ -49,15 +54,18 @@ pub fn get_binary_path(app_handle: &AppHandle) -> Result<PathBuf> {
     }
 }
 
-pub fn is_node_process_running(node_name: &str) -> Result<bool> {
+pub fn is_node_process_running(app_handle: &AppHandle, node_name: &str) -> Result<bool> {
     let system = System::new_with_specifics(
         RefreshKind::new().with_processes(ProcessRefreshKind::everything()),
     );
 
-    let pattern = format!(r"meroctl.*--node-name\s+{}.*run", regex_escape(node_name));
+    let pattern = format!(
+        r"meroctl.*--node-name\s+\b{}\b.*run",
+        regex_escape(node_name)
+    );
     let re = Regex::new(&pattern).map_err(|e| eyre!("Failed to create regex: {}", e))?;
 
-    Ok(system.processes().values().any(|process| {
+    for process in system.processes().values() {
         let cmd = process
             .cmd()
             .iter()
@@ -65,8 +73,22 @@ pub fn is_node_process_running(node_name: &str) -> Result<bool> {
             .collect::<Vec<&str>>()
             .join(" ");
 
-        re.is_match(&cmd)
-    }))
+        if re.is_match(&cmd) {
+            // Print the location of the process's executable
+            if let Some(exe_path) = process.exe() {
+                let binary_path = get_binary_path(app_handle)?;
+                if binary_path.as_path() != exe_path {
+                    bail!(
+                        "Node with name {} is already running outside of the application",
+                        node_name
+                    );
+                }
+                return Ok(true);
+            }
+        }
+    }
+
+    Ok(false)
 }
 
 pub fn get_node_ports(node_name: &str, app_handle: &AppHandle) -> Result<NodeConfig> {
@@ -123,4 +145,40 @@ fn regex_escape(s: &str) -> String {
         }
     }
     result
+}
+
+// Check if a node port is in use
+pub fn is_port_in_use(port: u16) -> bool {
+    let Ok(addr) = format!("127.0.0.1:{}", port).parse::<SocketAddr>() else {
+        return false;
+    };
+    TcpStream::connect_timeout(&addr, Duration::from_secs(1)).is_ok()
+}
+
+// Check if the node ports are available
+pub fn check_ports_availability(config: &NodeConfig) -> Result<()> {
+    if is_port_in_use(config.server_port) || is_port_in_use(config.swarm_port) {
+        return Err(eyre!(
+            "Port {} or {} is already in use",
+            config.server_port,
+            config.swarm_port
+        ));
+    }
+    Ok(())
+}
+
+// Kill the node process
+pub fn kill_node_process(node_name: &str) -> std::io::Result<()> {
+    let output = Command::new("pkill")
+        .args(&["-f", &format!("meroctl.*--node-name {}.*run", node_name)])
+        .output()?;
+
+    if !output.status.success() {
+        return Err(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            String::from_utf8_lossy(&output.stderr),
+        ));
+    }
+
+    Ok(())
 }

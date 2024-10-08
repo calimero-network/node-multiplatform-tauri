@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import Button from '../common/button';
-import Input from '../common/input';
-import Checkbox from '../common/checkbox';
+import Button from '../../common/button';
+import Input from '../../common/input';
+import Checkbox from '../../common/checkbox';
 import {
   PopupButtons,
   SuccessMessage,
   ErrorMessage,
-} from '../common/popup/Styled';
-import { NodeInitializationResult } from '../../hooks/useNodeManagement';
+} from '../../common/popup/Styled';
+import { CommandResponse } from '../../../hooks/useNodeManagement';
 
 interface NodeInitializationPopupProps {
   onInitialize: (
@@ -15,7 +15,7 @@ interface NodeInitializationPopupProps {
     serverPort: number,
     swarmPort: number,
     runOnStartup: boolean
-  ) => Promise<NodeInitializationResult>;
+  ) => Promise<CommandResponse>;
   onClose: () => void;
 }
 
