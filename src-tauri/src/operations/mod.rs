@@ -4,8 +4,7 @@ use crate::{
     tray::update_tray_menu,
     types::{AppState, NodeInfo, NodeProcess},
     utils::{
-        check_ports_availability, get_binary_path, get_node_ports, get_nodes_dir,
-        is_node_process_running, kill_node_process, strip_ansi_escapes,
+        check_ports_availability, get_binary_path, get_node_ports, get_nodes_dir, is_node_process_running, is_port_in_use, kill_node_process, strip_ansi_escapes
     },
 };
 use chrono::Local;
@@ -532,33 +531,24 @@ pub fn open_admin_dashboard(app_handle: AppHandle, node_name: String) -> Result<
 }
 
 pub async fn start_nodes_on_startup(state: State<'_, AppState>) -> Result<()> {
-    let keys: Vec<String> = {
-        let store = state
-            .store
-            .lock()
-            .map_err(|e| eyre!("Failed to lock store: {}", e))?;
-        store.keys().map(|k| k.to_string()).collect()
+    let nodes_to_start = {
+        let store = state.store.lock().map_err(|e| eyre!("Failed to lock store: {}", e))?;
+        store.keys()
+            .filter(|key| key.ends_with("_run_on_startup"))
+            .filter_map(|key| {
+                if let Some(Value::Bool(true)) = store.get(&key) {
+                    Some(key.trim_end_matches("_run_on_startup").to_string())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<String>>()
     };
-    for key in keys {
-        if key.ends_with("_run_on_startup") {
-            let value = {
-                let store = state
-                    .store
-                    .lock()
-                    .map_err(|e| eyre!("Failed to lock store: {}", e))?;
-                match store.get(&key) {
-                    Some(value) => value.clone(),
-                    None => return Err(eyre!("Key not found: {}", key)),
-                }
-            };
-            if let Value::Bool(true) = value {
-                let node_name = key.trim_end_matches("_run_on_startup");
-                let node_config = get_node_ports(node_name, &state.app_handle)?;
-                println!("Node name: {}", node_name);
-                if !is_port_in_use(node_config.server_port) && is_port_in_use(node_config.swarm_port) {
-                    start_node(state.clone(), node_name.to_string()).await?;
-                }
-            }
+
+    for node_name in nodes_to_start {
+        let node_config = get_node_ports(&node_name, &state.app_handle)?;
+        if !is_port_in_use(node_config.server_port) && !is_port_in_use(node_config.swarm_port) {
+            start_node(state.clone(), node_name).await?;
         }
     }
     Ok(())

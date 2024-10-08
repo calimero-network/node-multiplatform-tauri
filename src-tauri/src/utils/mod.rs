@@ -1,4 +1,4 @@
-use eyre::{eyre, Result};
+use eyre::{bail, eyre, Result};
 use lazy_static::lazy_static;
 use multiaddr::{Multiaddr, Protocol};
 use serde_json::Value;
