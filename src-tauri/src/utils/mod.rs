@@ -15,6 +15,7 @@ use std::{env, fs};
 use tauri::AppHandle;
 
 use crate::types::NodeConfig;
+use shared_utils::determine_bin_data;
 
 pub mod setup;
 
@@ -35,21 +36,16 @@ pub fn strip_ansi_escapes(s: &str) -> String {
 }
 
 pub fn get_binary_path(app_handle: &AppHandle) -> Result<PathBuf> {
-    let binary_name = "meroctl"; // The binary name is now consistent across all platforms
-
-    let bin_dir = format!("bin/{}/{}", std::env::consts::OS, std::env::consts::ARCH);
-    let binary_path = format!("{}/{}", bin_dir, binary_name);
+    let (os, arch, _) = determine_bin_data();
 
     if cfg!(debug_assertions) {
         // Development (Debug mode)
-        Ok(env::current_dir()
-            .map_err(|e| eyre!("Failed to get current directory: {}", e))?
-            .join(binary_path))
+        Ok(env::current_dir()?.join("bin").join(os).join(arch).join("meroctl"))
     } else {
-        // Production (Release mode)
+        let relative_path = format!("bin/{}/{}/meroctl", os, arch);
         app_handle
             .path_resolver()
-            .resolve_resource(&binary_path)
+            .resolve_resource(&relative_path)
             .ok_or_else(|| eyre!("Failed to resolve binary resource"))
     }
 }

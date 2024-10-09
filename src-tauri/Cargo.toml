@@ -14,6 +14,7 @@ flate2 = "1.0.34"
 eyre = "0.6.12"
 tar = "0.4.42"
 reqwest = "0.12.8"
+shared_utils = { path = "./shared_utils" }
 
 [dependencies]
 auto-launch = "0.5.0"
@@ -30,6 +31,7 @@ multiaddr = "0.18.2"
 flate2 = "1.0.34"
 tar = "0.4.42"
 reqwest = "0.12.8"
+shared_utils = { path = "./shared_utils" }
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
