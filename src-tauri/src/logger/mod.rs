@@ -1,7 +1,7 @@
 use crate::types::AppState;
 use crate::utils::get_nodes_dir;
 use std::fs::{self, File, OpenOptions};
-use std::io::{self, BufRead, BufReader, Read, Seek, SeekFrom, Write};
+use std::io::{self, copy, BufRead, BufReader, Seek, SeekFrom, Write};
 use std::path::PathBuf;
 
 use eyre::{eyre, Error, Result};
@@ -37,31 +37,30 @@ pub fn write_to_log(file: &mut File, line: &str) -> Result<bool, Error> {
 }
 
 fn check_log_size_and_trim(file: &mut File) -> io::Result<()> {
-    let metadata = file.metadata()?;
+  let metadata = file.metadata()?;
 
-    if metadata.len() > MAX_LOG_SIZE as u64 {
-        let excess_bytes = metadata.len() - MAX_LOG_SIZE as u64;
-        
-        // Seek to the position where we want to start keeping data
-        file.seek(SeekFrom::Start(excess_bytes))?;
-        
-        let mut reader = BufReader::new(file.try_clone()?);
-        
-        // Discard the first line (which might be partial)
-        let mut partial_line = String::new();
-        reader.read_line(&mut partial_line)?;
+  if metadata.len() > MAX_LOG_SIZE as u64 {
+      let excess_bytes = metadata.len() - MAX_LOG_SIZE as u64;
 
-        // Read the remaining content
-        let mut content = Vec::new();
-        reader.read_to_end(&mut content)?;
+      // Seek to the position where we want to start keeping data
+      file.seek(SeekFrom::Start(excess_bytes))?;
 
-        // Truncate the file and write the remaining content
-        file.set_len(0)?;
-        file.seek(SeekFrom::Start(0))?;
-        file.write_all(&content)?;
-    }
+      // Create a BufReader for the remaining content
+      let mut reader = BufReader::new(file.try_clone()?);
 
-    Ok(())
+      // Discard the first line (which might be partial)
+      let mut partial_line = String::new();
+      reader.read_line(&mut partial_line)?;
+
+      // Truncate the file
+      file.set_len(0)?;
+      file.seek(SeekFrom::Start(0))?;
+
+      // Use `copy` to write the remaining content back to the file
+      copy(&mut reader, file)?;
+  }
+
+  Ok(())
 }
 
 pub fn get_log_file_path(app_handle: &AppHandle, node_name: &str) -> PathBuf {
