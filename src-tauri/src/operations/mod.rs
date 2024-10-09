@@ -236,13 +236,6 @@ pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result
         .lock()
         .map_err(|e| eyre!("Failed to lock node manager: {}", e))?;
 
-    // Update the NodeManager with the new node process
-    let log_file = manager
-        .nodes
-        .get_mut(&node_name)
-        .and_then(|n| n.log_file.take())
-        .ok_or_else(|| eyre!("Failed to get log file: {}", node_name))?;
-
     let config = get_node_ports(&node_name, &app_handle)?;
     check_ports_availability(&config)?;
 
@@ -280,6 +273,13 @@ pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result
         .stderr
         .take()
         .ok_or_else(|| eyre!("Failed to capture stderr".to_string()))?;
+
+          // Update the NodeManager with the new node process
+    let log_file = manager
+        .nodes
+        .get_mut(&node_name)
+        .and_then(|n| n.log_file.take())
+        .ok_or_else(|| eyre!("Failed to get log file: {}", node_name))?;
 
     // Clone the log_file to ensure it has a 'static lifetime
     let log_file_clone_for_stdin = log_file
