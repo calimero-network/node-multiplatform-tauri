@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled from 'styled-components';
 
 export const FullPageIframe = styled.iframe`
   position: fixed;
@@ -25,7 +25,7 @@ export const CloseButton = styled.button`
   font-size: 14px;
   border: none;
   border-radius: 4px;
-  color: #FFF;
+  color: #fff;
   font-weight: normal;
   font-size: 18px;
   line-height: 40px;

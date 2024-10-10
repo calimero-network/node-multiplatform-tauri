@@ -28,8 +28,8 @@ export const NodeListItem = styled.li<NodeListItemProps>`
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: #4CA1FC;
-    color: #FFF;
+    background-color: #4ca1fc;
+    color: #fff;
   }
 `;
 
@@ -38,7 +38,10 @@ export const Notice = styled.p`
   font-style: italic;
 `;
 
-export const StatusIcon = styled.span<{ $isRunning: boolean; $isExternal: boolean }>`
+export const StatusIcon = styled.span<{
+  $isRunning: boolean;
+  $isExternal: boolean;
+}>`
   display: inline-block;
   width: 20px;
   height: 10px;

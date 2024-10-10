@@ -33,7 +33,10 @@ const NodeList: React.FC<NodeListProps> = ({
                 selected={node.name === selectedNode?.name}
                 onClick={() => handleNodeSelect(node.name)}
               >
-                <StatusIcon $isRunning={node.is_running} $isExternal={node.external_node} />
+                <StatusIcon
+                  $isRunning={node.is_running}
+                  $isExternal={node.external_node}
+                />
                 {node.name}
               </NodeListItem>
             ))}

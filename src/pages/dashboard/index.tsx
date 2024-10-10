@@ -86,10 +86,15 @@ const Dashboard: React.FC = () => {
   return (
     <DashboardContainer>
       {showDocumentation ? (
-        <PopupWrapper isOpen={showDocumentation} onClose={handleCloseDocumentation}>
-          <Documentation onClose={() => {
-            handleCloseDocumentation();
-          }} />
+        <PopupWrapper
+          isOpen={showDocumentation}
+          onClose={handleCloseDocumentation}
+        >
+          <Documentation
+            onClose={() => {
+              handleCloseDocumentation();
+            }}
+          />
         </PopupWrapper>
       ) : (
         <>
@@ -98,9 +103,9 @@ const Dashboard: React.FC = () => {
             <Sidebar>
               <NodeList
                 nodes={nodes || []}
-                  selectedNode={selectedNode}
-                  handleNodeSelect={handleNodeSelect}
-                />
+                selectedNode={selectedNode}
+                handleNodeSelect={handleNodeSelect}
+              />
               <Button onClick={() => setShowPopup(true)} variant="primary">
                 Initialize Node
               </Button>

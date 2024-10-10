@@ -8,9 +8,13 @@ interface DocumentationProps {
 const Documentation: React.FC<DocumentationProps> = ({ onClose }) => {
   return (
     <>
-      <CloseButton onClick={() => {
-        onClose();
-      }}>Close</CloseButton>
+      <CloseButton
+        onClick={() => {
+          onClose();
+        }}
+      >
+        Close
+      </CloseButton>
       <FullPageIframe
         src="https://calimero-network.github.io/"
         title="Documentation"

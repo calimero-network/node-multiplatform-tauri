@@ -34,7 +34,6 @@ export type MessagePopupState = {
 };
 
 const MessagePopup: React.FC<MessagePopupProps> = ({ ...props }) => {
-
   const closePopup = () => {
     props.onClose();
     // If node is external, we need to disable the selected node operations

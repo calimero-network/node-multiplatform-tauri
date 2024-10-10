@@ -8,7 +8,7 @@ const buttonVariants = {
   primary: css`
     background-color: #6b7280;
     &:hover {
-      background-color: #858C99;
+      background-color: #858c99;
     }
   `,
   warning: css`
