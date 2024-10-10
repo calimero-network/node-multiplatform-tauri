@@ -7,7 +7,7 @@ use std::fs::File;
 use std::io::copy;
 use std::io::BufReader;
 use std::io::Read;
-use std::path::PathBuf;
+use std::path::Path;
 use tar::Archive;
 
 fn main() {
@@ -38,11 +38,7 @@ async fn setup_binary() -> Result<()> {
     Ok(())
 }
 
-async fn download_and_extract(
-    url: &str,
-    cache_bin_path: &PathBuf,
-    bin_dir: &PathBuf,
-) -> Result<()> {
+async fn download_and_extract(url: &str, cache_bin_path: &Path, bin_dir: &Path) -> Result<()> {
     let response = get(url).await.expect("Failed to download binary");
     let mut out = File::create(cache_bin_path).expect("Failed to create file");
     copy(&mut response.bytes().await.unwrap().as_ref(), &mut out).expect("Failed to copy content");
