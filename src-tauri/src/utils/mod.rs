@@ -40,7 +40,11 @@ pub fn get_binary_path(app_handle: &AppHandle) -> Result<PathBuf> {
 
     if cfg!(debug_assertions) {
         // Development (Debug mode)
-        Ok(env::current_dir()?.join("bin").join(os).join(arch).join("meroctl"))
+        Ok(env::current_dir()?
+            .join("bin")
+            .join(os)
+            .join(arch)
+            .join("meroctl"))
     } else {
         let relative_path = format!("bin/{}/{}/meroctl", os, arch);
         app_handle

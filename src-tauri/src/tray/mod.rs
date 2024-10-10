@@ -22,7 +22,10 @@ pub fn update_tray_menu(state: State<'_, AppState>) -> Result<(), eyre::Report> 
     Ok(())
 }
 
-fn build_single_node_menu(app_handle: &AppHandle, node: &str) -> Result<SystemTrayMenu, eyre::Report> {
+fn build_single_node_menu(
+    app_handle: &AppHandle,
+    node: &str,
+) -> Result<SystemTrayMenu, eyre::Report> {
     // Initialize status_icon and is_running based on the node's running status
     let (status_icon, is_running) = match is_node_process_running(app_handle, node) {
         Ok(true) => ("🟢", true),
@@ -52,7 +55,10 @@ fn build_empty_node_menu() -> Result<SystemTrayMenu, eyre::Report> {
         .add_item(CustomMenuItem::new("quit".to_string(), "Quit")))
 }
 
-fn build_multi_node_menu(app_handle: &AppHandle, nodes: &Vec<NodeInfo>) -> Result<SystemTrayMenu, eyre::Report> {
+fn build_multi_node_menu(
+    app_handle: &AppHandle,
+    nodes: &Vec<NodeInfo>,
+) -> Result<SystemTrayMenu, eyre::Report> {
     let mut menu = SystemTrayMenu::new();
 
     for node in nodes {

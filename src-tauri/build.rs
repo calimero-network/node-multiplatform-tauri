@@ -20,7 +20,7 @@ async fn setup_binary() -> Result<()> {
     let binary_name = "meroctl";
     let cache_dir = std::env::temp_dir().join(binary_name);
     std::fs::create_dir_all(&cache_dir).expect("Failed to create cache directory");
-    
+
     let url = format!(
         "https://github.com/calimero-network/core/releases/latest/download/{}.tar.gz",
         target
@@ -38,7 +38,11 @@ async fn setup_binary() -> Result<()> {
     Ok(())
 }
 
-async fn download_and_extract(url: &str, cache_bin_path: &PathBuf, bin_dir: &PathBuf) -> Result<()> {
+async fn download_and_extract(
+    url: &str,
+    cache_bin_path: &PathBuf,
+    bin_dir: &PathBuf,
+) -> Result<()> {
     let response = get(url).await.expect("Failed to download binary");
     let mut out = File::create(cache_bin_path).expect("Failed to create file");
     copy(&mut response.bytes().await.unwrap().as_ref(), &mut out).expect("Failed to copy content");

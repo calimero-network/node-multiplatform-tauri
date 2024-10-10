@@ -4,7 +4,8 @@ use crate::{
     tray::update_tray_menu,
     types::{AppState, NodeInfo, NodeProcess},
     utils::{
-        check_ports_availability, get_binary_path, get_node_ports, get_nodes_dir, is_node_process_running, is_port_in_use, kill_node_process, strip_ansi_escapes
+        check_ports_availability, get_binary_path, get_node_ports, get_nodes_dir,
+        is_node_process_running, is_port_in_use, kill_node_process, strip_ansi_escapes,
     },
 };
 use chrono::Local;
@@ -104,11 +105,12 @@ pub fn get_nodes(state: State<'_, AppState>) -> Result<Vec<NodeInfo>> {
         if let Some(node_name) = entry.file_name().to_str() {
             let node_name = node_name.to_owned();
             if let Ok(config) = get_node_ports(&node_name, &state.app_handle) {
-                let (is_running, external_node) = match is_node_process_running(&state.app_handle, &node_name) {
-                    Ok(true) => (true, false),
-                    Ok(false) => (false, false),
-                    Err(_) => (false, true), // Assume running if there's an error
-                };
+                let (is_running, external_node) =
+                    match is_node_process_running(&state.app_handle, &node_name) {
+                        Ok(true) => (true, false),
+                        Ok(false) => (false, false),
+                        Err(_) => (false, true), // Assume running if there's an error
+                    };
                 let run_on_startup = get_run_node_on_startup(&state, &node_name)?;
                 nodes.push(NodeInfo {
                     name: node_name,
@@ -274,7 +276,7 @@ pub async fn start_node(state: State<'_, AppState>, node_name: String) -> Result
         .take()
         .ok_or_else(|| eyre!("Failed to capture stderr".to_string()))?;
 
-          // Update the NodeManager with the new node process
+    // Update the NodeManager with the new node process
     let log_file = manager
         .nodes
         .get_mut(&node_name)
@@ -532,8 +534,12 @@ pub fn open_admin_dashboard(app_handle: AppHandle, node_name: String) -> Result<
 
 pub async fn start_nodes_on_startup(state: State<'_, AppState>) -> Result<()> {
     let nodes_to_start = {
-        let store = state.store.lock().map_err(|e| eyre!("Failed to lock store: {}", e))?;
-        store.keys()
+        let store = state
+            .store
+            .lock()
+            .map_err(|e| eyre!("Failed to lock store: {}", e))?;
+        store
+            .keys()
             .filter(|key| key.ends_with("_run_on_startup"))
             .filter_map(|key| {
                 if let Some(Value::Bool(true)) = store.get(&key) {
