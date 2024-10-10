@@ -81,19 +81,19 @@ const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
     <OperationsContainer>
       <NodeTitle>Currently selected node: {props.selectedNode.name}</NodeTitle>
       <NodeActions>
-        <Button onClick={() => setActiveSection('controls')} variant="controls">
+        <Button onClick={() => setActiveSection('controls')} variant="primary">
           Node Controls
         </Button>
-        <Button onClick={() => setActiveSection('config')} variant="configure">
+        <Button onClick={() => setActiveSection('config')} variant="primary">
           Configure Node
         </Button>
-        <Button onClick={() => setActiveSection('logs')} variant="logs">
+        <Button onClick={() => setActiveSection('logs')} variant="primary">
           Node Logs
         </Button>
-        <Button onClick={() => openAdminDashboard()} variant="controls">
+        <Button onClick={() => openAdminDashboard()} variant="primary">
           Admin Dashboard
         </Button>
-        <Button onClick={() => setActiveSection('delete')} variant="delete">
+        <Button onClick={() => setActiveSection('delete')} variant="warning">
           Delete Node
         </Button>
       </NodeActions>
@@ -108,6 +108,7 @@ const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
         {activeSection === 'controls' && (
           <NodeControls
             selectedNode={props.selectedNode}
+            handleNodeSelect={props.handleNodeSelect}
             handleNodeStart={props.handleNodeStart}
             handleNodeStop={props.handleNodeStop}
             action={props.trayAction?.action ?? null}

@@ -22,6 +22,7 @@ import { TrayAction } from '../../../pages/dashboard';
 
 interface NodeControlsProps {
   selectedNode: NodeDetails;
+  handleNodeSelect: (nodeName: string) => void;
   handleNodeStart: (nodeName: string) => Promise<CommandResponse>;
   handleNodeStop: (nodeName: string) => Promise<CommandResponse>;
   action: string | null;
@@ -120,6 +121,7 @@ const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
         } else {
           setIsRunning(false);
         }
+        props.handleNodeSelect(props.selectedNode.name);
       } catch (error) {
         console.error('Error starting node:', error);
         setOutput(
@@ -159,6 +161,7 @@ const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
             prevOutput + `Failed to stop node: ${result.message}\n`
         );
       }
+      props.handleNodeSelect(props.selectedNode.name);
     } else {
       setMessagePopup({
         isOpen: true,
@@ -199,11 +202,11 @@ const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
   return (
     <ControlsContainer>
       <ButtonGroup>
-        <Button variant="start" onClick={handleStart}>
-          Start Node
-        </Button>
-        <Button variant="stop" onClick={handleStop}>
+        <Button variant="warning" onClick={handleStop}>
           Stop Node
+        </Button>
+        <Button variant="primary" onClick={handleStart}>
+          Start Node
         </Button>
       </ButtonGroup>
       <TerminalContainer>

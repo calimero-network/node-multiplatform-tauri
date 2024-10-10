@@ -1,13 +1,7 @@
 import React from 'react';
 import { StyledButton } from './Styled';
 
-type ButtonVariant =
-  | 'start'
-  | 'stop'
-  | 'configure'
-  | 'delete'
-  | 'logs'
-  | 'controls';
+type ButtonVariant = 'primary' | 'secondary' | 'warning';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -15,7 +9,7 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
 
 const Button: React.FC<ButtonProps> = ({
   children,
-  variant = 'start',
+  variant = 'primary',
   ...props
 }) => {
   return (

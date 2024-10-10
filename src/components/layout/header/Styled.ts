@@ -61,11 +61,3 @@ export const HeaderTitle = styled.h1`
     font-size: 1.2rem;
   }
 `;
-
-export const Placeholder = styled.div`
-  width: 160px;
-
-  @media (max-width: 768px) {
-    display: none;
-  }
-`;

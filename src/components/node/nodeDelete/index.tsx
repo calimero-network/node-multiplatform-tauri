@@ -39,10 +39,10 @@ const DeleteNode: React.FC<DeleteNodeProps> = ({
         Are you sure you want to delete this node?
       </DeleteNodeText>
       {errorMessage && <ErrorMessage>{errorMessage}</ErrorMessage>}
-      <Button onClick={onCancel} variant="stop">
+      <Button onClick={onCancel} variant="primary">
         Cancel
       </Button>
-      <Button onClick={handleDelete} variant="delete" disabled={isLoading}>
+      <Button onClick={handleDelete} variant="warning" disabled={isLoading}>
         Confirm Delete
       </Button>
     </DeleteNodeContainer>

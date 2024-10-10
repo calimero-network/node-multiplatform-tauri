@@ -1,44 +1,27 @@
 import styled, { css } from 'styled-components';
 
 interface ButtonProps {
-  variant?: 'start' | 'stop' | 'configure' | 'delete' | 'logs' | 'controls';
+  variant?: 'primary' | 'secondary' | 'warning';
 }
 
 const buttonVariants = {
-  start: css`
-    background-color: #2ecc71;
+  primary: css`
+    background-color: #6b7280;
     &:hover {
-      background-color: #27ae60;
+      background-color: #858C99;
     }
   `,
-  stop: css`
-    background-color: #e74c3c;
+  warning: css`
+    background-color: #e11e5c;
     &:hover {
       background-color: #c0392b;
     }
   `,
-  configure: css`
-    background-color: #3498db;
+  secondary: css`
+    background-color: rgb(76, 250, 252);
+    color: black;
     &:hover {
       background-color: #2980b9;
-    }
-  `,
-  delete: css`
-    background-color: #95a5a6;
-    &:hover {
-      background-color: #7f8c8d;
-    }
-  `,
-  logs: css`
-    background-color: #f39c12;
-    &:hover {
-      background-color: #d35400;
-    }
-  `,
-  controls: css`
-    background-color: #9b59b6; // Example color, adjust as needed
-    &:hover {
-      background-color: #8e44ad;
     }
   `,
 };
@@ -49,7 +32,7 @@ export const StyledButton = styled.button<{ variant: ButtonProps['variant'] }>`
   border: none;
   border-radius: 4px;
   color: white;
-  font-weight: bold;
+  font-weight: normal;
   font-size: 14px;
   line-height: 40px;
   cursor: pointer;

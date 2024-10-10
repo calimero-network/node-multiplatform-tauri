@@ -22,12 +22,14 @@ export const NodeListItem = styled.li<NodeListItemProps>`
   cursor: pointer;
   padding: 0.75rem;
   margin-bottom: 0.5rem;
-  background-color: ${(props) => (props.selected ? '#3498db' : '#2c3e50')};
+  background-color: #cbcfd2;
   border-radius: 4px;
+  color: #000;
   transition: background-color 0.3s ease;
 
   &:hover {
-    background-color: #3498db;
+    background-color: #4CA1FC;
+    color: #FFF;
   }
 `;
 

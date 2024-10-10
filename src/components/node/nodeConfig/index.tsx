@@ -20,38 +20,35 @@ interface NodeConfigProps {
   onClose: () => void;
 }
 
-const NodeConfig: React.FC<NodeConfigProps> = ({
-  selectedNode,
-  onConfigUpdate,
-}) => {
+const NodeConfig: React.FC<NodeConfigProps> = ({ ...props }) => {
   const [serverPort, setServerPort] = useState<number>(
-    selectedNode.node_ports.server_port
+    props.selectedNode.node_ports.server_port
   );
   const [swarmPort, setSwarmPort] = useState<number>(
-    selectedNode.node_ports.swarm_port
+    props.selectedNode.node_ports.swarm_port
   );
-  const [nodeName, setNodeName] = useState<string>(selectedNode.name);
+  const [nodeName, setNodeName] = useState<string>(props.selectedNode.name);
   const [runOnStartup, setRunOnStartup] = useState<boolean>(
-    selectedNode.run_on_startup
+    props.selectedNode.run_on_startup
   );
   const [error, setError] = useState<string>('');
   const [successMessage, setSuccessMessage] = useState<string>('');
 
   useEffect(() => {
-    setServerPort(selectedNode.node_ports.server_port);
-    setSwarmPort(selectedNode.node_ports.swarm_port);
-    setNodeName(selectedNode.name);
-    setRunOnStartup(selectedNode.run_on_startup);
+    setServerPort(props.selectedNode.node_ports.server_port);
+    setSwarmPort(props.selectedNode.node_ports.swarm_port);
+    setNodeName(props.selectedNode.name);
+    setRunOnStartup(props.selectedNode.run_on_startup);
     setError('');
     setSuccessMessage('');
-  }, [selectedNode]);
+  }, [props.selectedNode]);
 
   const handleUpdateConfig = async () => {
     setError('');
     setSuccessMessage('');
     try {
-      const result: CommandResponse = await onConfigUpdate({
-        originalNodeName: selectedNode.name,
+      const result: CommandResponse = await props.onConfigUpdate({
+        originalNodeName: props.selectedNode.name,
         nodeName: nodeName,
         serverPort: serverPort,
         swarmPort: swarmPort,
@@ -80,7 +77,7 @@ const NodeConfig: React.FC<NodeConfigProps> = ({
     }
   };
 
-  if (!selectedNode) {
+  if (!props.selectedNode) {
     return (
       <NodeConfigContainer>Select a node to configure</NodeConfigContainer>
     );

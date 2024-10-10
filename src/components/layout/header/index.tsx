@@ -5,11 +5,15 @@ import {
   LogoContainer,
   DashboardText,
   HeaderTitle,
-  Placeholder,
 } from './Styled';
 import calimeroLogo from '../../../assets/calimero-logo.svg';
+import Button from '../../common/button';
 
-const Header: React.FC = () => (
+interface HeaderProps {
+  onShowDocumentation: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onShowDocumentation }) => (
   <HeaderStyled>
     <HeaderContent>
       <LogoContainer>
@@ -17,7 +21,9 @@ const Header: React.FC = () => (
         <DashboardText>Calimero Network</DashboardText>
       </LogoContainer>
       <HeaderTitle>Node Management Dashboard</HeaderTitle>
-      <Placeholder />
+      <Button variant="primary" onClick={onShowDocumentation}>
+        Documentation
+      </Button>
     </HeaderContent>
   </HeaderStyled>
 );
