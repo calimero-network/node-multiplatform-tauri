@@ -1,4 +1,4 @@
-use crate::operations::open_admin_dashboard;
+use crate::operations::{open_admin_dashboard, stop_all_nodes};
 use crate::types::NodeInfo;
 use crate::{operations::get_nodes, types::AppState, utils::is_node_process_running};
 use eyre::eyre;
@@ -119,7 +119,14 @@ pub fn handle_tray_click(app_handle: &AppHandle, menu_id: &str) -> Result<(), ey
         (Some("show"), Some("window")) => show_main_window(app_handle),
         (Some(action), Some(node)) => handle_tray_action(app_handle, action, node),
         (Some("quit"), None) => {
-            app_handle.exit(0);
+            // Stop all nodes and exit the application
+            let app_handle = app_handle.clone();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = stop_all_nodes(app_handle.state::<AppState>()).await {
+                    eprintln!("Failed to stop all nodes: {}", e);
+                }
+                app_handle.exit(0);
+            });
             Ok(())
         }
         _ => Ok(()),

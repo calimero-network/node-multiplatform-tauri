@@ -62,9 +62,13 @@ pub fn handle_menu_click(event: &WindowMenuEvent) -> Result<(), eyre::Report> {
         }
         "quit" => {
             // Stop all nodes and exit the application
-            tauri::async_runtime::block_on(stop_all_nodes(app_handle.state::<AppState>().clone()))
-                .unwrap();
-            app_handle.exit(0);
+            let app_handle = app_handle.clone();
+            tauri::async_runtime::spawn(async move {
+                if let Err(e) = stop_all_nodes(app_handle.state::<AppState>()).await {
+                    eprintln!("Failed to stop all nodes: {}", e);
+                }
+                app_handle.exit(0);
+            });
         }
         _ => {}
     }
