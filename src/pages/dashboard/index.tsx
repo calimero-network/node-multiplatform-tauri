@@ -13,6 +13,7 @@ import {
 } from './Styled';
 import NodeOperations from '../../components/node/nodeOperations';
 import { listen } from '@tauri-apps/api/event';
+import Documentation from '../../components/documentation';
 
 interface TriggerActionPayload {
   nodeName: string;
@@ -30,6 +31,16 @@ export type SectionTypes = 'config' | 'controls' | 'logs' | 'delete';
 const Dashboard: React.FC = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [trayAction, setTrayAction] = useState<TrayAction | null>(null);
+
+  const [showDocumentation, setShowDocumentation] = useState(false);
+
+  const handleShowDocumentation = () => {
+    setShowDocumentation(true);
+  };
+
+  const handleCloseDocumentation = () => {
+    setShowDocumentation(false);
+  };
 
   const {
     nodesRef,
@@ -74,42 +85,51 @@ const Dashboard: React.FC = () => {
 
   return (
     <DashboardContainer>
-      <Header />
-      <MainContent>
-        <Sidebar>
-          <NodeList
-            nodes={nodes || []}
-            selectedNode={selectedNode}
-            handleNodeSelect={handleNodeSelect}
-          />
-          <Button onClick={() => setShowPopup(true)} variant="start">
-            Initialize Node
-          </Button>
-        </Sidebar>
-        <ContentArea>
-          {selectedNode && (
-            <NodeOperations
-              selectedNode={selectedNode}
-              handleNodeConfigUpdate={handleNodeConfigUpdate}
-              handleNodeStart={handleNodeStart}
-              handleNodeStop={handleNodeStop}
-              handleOpenAdminDashboard={handleOpenAdminDashboard}
-              handleNodeDelete={handleNodeDelete}
-              handleNodeSelect={handleNodeSelect}
-              trayAction={trayAction}
-              setTrayAction={setTrayAction}
-              refreshNodesList={refreshNodesList}
+      {showDocumentation ? (
+        <PopupWrapper isOpen={showDocumentation} onClose={handleCloseDocumentation}>
+          <Documentation onClose={() => {
+            handleCloseDocumentation();
+          }} />
+        </PopupWrapper>
+      ) : (
+        <>
+          <Header onShowDocumentation={handleShowDocumentation} />
+          <MainContent>
+            <Sidebar>
+              <NodeList
+                nodes={nodes || []}
+                  selectedNode={selectedNode}
+                  handleNodeSelect={handleNodeSelect}
+                />
+              <Button onClick={() => setShowPopup(true)} variant="primary">
+                Initialize Node
+              </Button>
+            </Sidebar>
+            <ContentArea>
+              {selectedNode && (
+                <NodeOperations
+                  selectedNode={selectedNode}
+                  handleNodeConfigUpdate={handleNodeConfigUpdate}
+                  handleNodeStart={handleNodeStart}
+                  handleNodeStop={handleNodeStop}
+                  handleOpenAdminDashboard={handleOpenAdminDashboard}
+                  handleNodeDelete={handleNodeDelete}
+                  handleNodeSelect={handleNodeSelect}
+                  trayAction={trayAction}
+                  setTrayAction={setTrayAction}
+                  refreshNodesList={refreshNodesList}
+                />
+              )}
+            </ContentArea>
+          </MainContent>
+          <PopupWrapper isOpen={showPopup} onClose={() => setShowPopup(false)}>
+            <NodeInitializationPopup
+              onInitialize={handleNodeInitialize}
+              onClose={() => setShowPopup(false)}
             />
-          )}
-        </ContentArea>
-      </MainContent>
-
-      <PopupWrapper isOpen={showPopup} onClose={() => setShowPopup(false)}>
-        <NodeInitializationPopup
-          onInitialize={handleNodeInitialize}
-          onClose={() => setShowPopup(false)}
-        />
-      </PopupWrapper>
+          </PopupWrapper>
+        </>
+      )}
     </DashboardContainer>
   );
 };
