@@ -58,7 +58,7 @@ const MessagePopup: React.FC<MessagePopupProps> = ({ ...props }) => {
           <ButtonWrapper>
             <Button
               onClick={() => closePopup()}
-              variant={props.type === MessageType.ERROR ? 'stop' : 'start'}
+              variant={props.type === MessageType.ERROR ? 'warning' : 'primary'}
             >
               {props.type === MessageType.ERROR ? 'Close' : 'OK'}
             </Button>
@@ -67,7 +67,7 @@ const MessagePopup: React.FC<MessagePopupProps> = ({ ...props }) => {
             <ButtonWrapper>
               <Button
                 onClick={() => handleRefreshNodesList()}
-                variant={'start'}
+                variant={'primary'}
               >
                 Refresh
               </Button>

@@ -78,10 +78,10 @@ const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({
           onChange={(e) => setRunOnStartup(e.target.checked)}
         />
         <PopupButtons>
-          <Button type="button" variant="stop" onClick={onClose}>
+          <Button type="button" variant="warning" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" variant="start">
+          <Button type="submit" variant="primary">
             Initialize Node
           </Button>
         </PopupButtons>
