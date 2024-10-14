@@ -130,6 +130,7 @@ const Dashboard: React.FC = () => {
           <PopupWrapper isOpen={showPopup} onClose={() => setShowPopup(false)}>
             <NodeInitializationPopup
               onInitialize={handleNodeInitialize}
+              handleNodeSelect={handleNodeSelect}
               onClose={() => setShowPopup(false)}
             />
           </PopupWrapper>

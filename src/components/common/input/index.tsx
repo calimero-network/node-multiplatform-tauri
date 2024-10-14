@@ -1,18 +1,18 @@
 import React from 'react';
-import { InputGroup, Label, StyledInput, ErrorMessage } from './Styled';
+import { InputContainer, StyledInput, Label } from './Styled';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
+  label: string;
+  noMargin?: boolean;
+  showingCharCount?: boolean;
 }
 
-const Input: React.FC<InputProps> = ({ label, error, ...props }) => {
+const Input: React.FC<InputProps> = ({ label, noMargin, showingCharCount, ...props }) => {
   return (
-    <InputGroup>
-      {label && <Label htmlFor={props.id}>{label}</Label>}
-      <StyledInput $hasError={!!error} {...props} />
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-    </InputGroup>
+    <InputContainer noMargin={noMargin} showingCharCount={showingCharCount}>
+      <Label>{label}</Label>
+      <StyledInput $noMargin={noMargin} $showingCharCount={showingCharCount} {...props} />
+    </InputContainer>
   );
 };
 
