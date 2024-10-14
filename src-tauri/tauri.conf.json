@@ -23,6 +23,11 @@
         "message": true,
         "open": false,
         "save": false
+      },
+      "clipboard": {
+        "all": true,
+        "readText": true,
+        "writeText": true
       }
     },
     "systemTray": {
