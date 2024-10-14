@@ -41,3 +41,10 @@ export const ErrorMessage = styled.p`
   font-weight: bold;
   margin-top: 10px;
 `;
+
+export const CharacterCount = styled.small<{ warning: boolean }>`
+  display: block;
+  color: ${props => props.warning ? 'orange' : 'inherit'};
+  font-style: italic;
+  margin-bottom: 1rem;
+`;

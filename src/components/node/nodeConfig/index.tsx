@@ -18,6 +18,7 @@ interface NodeConfigProps {
   selectedNode: NodeDetails;
   onConfigUpdate: (config: UpdateNodeConfigParams) => Promise<CommandResponse>;
   onClose: () => void;
+  handleNodeSelect: (nodeName: string) => void;
 }
 
 const NodeConfig: React.FC<NodeConfigProps> = ({ ...props }) => {
@@ -59,6 +60,7 @@ const NodeConfig: React.FC<NodeConfigProps> = ({ ...props }) => {
         setSuccessMessage('Node configuration updated successfully');
         setTimeout(() => {
           setSuccessMessage('');
+          props.handleNodeSelect(nodeName);
         }, 2000);
       } else {
         setError(result.message);
