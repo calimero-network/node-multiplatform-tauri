@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [ '**' ]  # To run on any branch
   pull_request:
-    branches: [ main ]
+    branches: [ '**' ]  # To run on any branch
   workflow_dispatch:
     inputs:
       version:
