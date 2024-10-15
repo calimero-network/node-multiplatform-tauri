@@ -28,10 +28,10 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Setup Node.js
-      uses: actions/setup-node@v2
+      uses: actions/setup-node@v3
       with:
         node-version: '16'
 
@@ -61,17 +61,17 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tagName: v__VERSION__
-        releaseName: "App v__VERSION__"
+        tagName: v${{ github.event.inputs.version || '__VERSION__' }}
+        releaseName: "App v${{ github.event.inputs.version || '__VERSION__' }}"
         releaseBody: "See the assets to download this version and install."
         releaseDraft: true
         prerelease: false
         args: --target ${{ matrix.target }}
 
     - name: Upload artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
-        name: meroctl-${{ matrix.target }}
+        name: meroctl-${{ matrix.target }}-${{ github.event.inputs.version || 'latest' }}
         path: |
           src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*
           src-tauri/target/${{ matrix.target }}/release/bundle/deb/*
