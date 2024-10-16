@@ -44,10 +44,6 @@ jobs:
           # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.args == '--target aarch64-unknown-linux-gnu' && 'aarch64-unknown-linux-gnu' || '' }}
 
-      - name: Add aarch64-unknown-linux-gnu target
-        if: matrix.args == '--target aarch64-unknown-linux-gnu'
-        run: rustup target add aarch64-unknown-linux-gnu
-
       - name: Install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04'
         run: |
@@ -64,38 +60,32 @@ jobs:
           echo "CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
           echo "CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++" >> $GITHUB_ENV
 
-      - name: Download and set up OpenSSL for cross-compilation
+      - name: Install and configure Zig for aarch64 cross-compilation
         if: matrix.args == '--target aarch64-unknown-linux-gnu'
         run: |
-          wget https://www.openssl.org/source/openssl-1.1.1k.tar.gz
-          tar -xzf openssl-1.1.1k.tar.gz
-          cd openssl-1.1.1k
-          ./Configure linux-aarch64 --prefix=$HOME/openssl-aarch64 --cross-compile-prefix=aarch64-linux-gnu-
-          make -j$(nproc)
-          make install_sw
-          cd ..
-          echo "OPENSSL_DIR=$HOME/openssl-aarch64" >> $GITHUB_ENV
-          echo "OPENSSL_LIB_DIR=$HOME/openssl-aarch64/lib" >> $GITHUB_ENV
-          echo "OPENSSL_INCLUDE_DIR=$HOME/openssl-aarch64/include" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$HOME/openssl-aarch64/lib/pkgconfig" >> $GITHUB_ENV
-          echo "PKG_CONFIG_ALLOW_CROSS=1" >> $GITHUB_ENV
-          echo "PKG_CONFIG_SYSROOT_DIR=/" >> $GITHUB_ENV
-          echo "OPENSSL_STATIC=1" >> $GITHUB_ENV
+          wget https://ziglang.org/download/0.11.0/zig-linux-x86_64-0.11.0.tar.xz
+          tar -xf zig-linux-x86_64-0.11.0.tar.xz
+          echo "ZIG_PATH=$PWD/zig-linux-x86_64-0.11.0/zig" >> $GITHUB_ENV
+          echo "$PWD/zig-linux-x86_64-0.11.0" >> $GITHUB_PATH
+          zig-linux-x86_64-0.11.0/zig version
+          echo "CARGO_ZIGBUILD_ZIG=$PWD/zig-linux-x86_64-0.11.0/zig" >> $GITHUB_ENV
+          cargo install cargo-zigbuild
 
       - name: Install frontend dependencies
-        run: pnpm install # change this to npm, pnpm or bun depending on which one you use.
+        run: pnpm install
 
-      - name: Build Tauri app
+      - name: Build Tauri app for AArch64
+        if: matrix.args == '--target aarch64-unknown-linux-gnu'
+        env:
+          RUSTFLAGS: "-C target-feature=+crt-static"
+        run: |
+          cargo zigbuild --release --target aarch64-unknown-linux-gnu
+          
+      - name: Build Tauri app for other targets
+        if: matrix.args != '--target aarch64-unknown-linux-gnu'
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          OPENSSL_DIR: ${{ env.OPENSSL_DIR }}
-          OPENSSL_LIB_DIR: ${{ env.OPENSSL_LIB_DIR }}
-          OPENSSL_INCLUDE_DIR: ${{ env.OPENSSL_INCLUDE_DIR }}
-          PKG_CONFIG_PATH: ${{ env.PKG_CONFIG_PATH }}
-          PKG_CONFIG_ALLOW_CROSS: ${{ env.PKG_CONFIG_ALLOW_CROSS }}
-          PKG_CONFIG_SYSROOT_DIR: ${{ env.PKG_CONFIG_SYSROOT_DIR }}
-          OPENSSL_STATIC: ${{ env.OPENSSL_STATIC }}
         with:
           tagName: app-v__VERSION__
           releaseName: 'App v__VERSION__'
