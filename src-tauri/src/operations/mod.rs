@@ -52,7 +52,8 @@ pub async fn create_node(
         .map_err(|e| eyre!("Failed to execute command: {}", e))?;
 
     if !output.status.success() {
-        return Ok(false);
+        let stderr = strip_ansi_escapes(&String::from_utf8_lossy(&output.stderr));
+        return Err(eyre!("Failed to initialize node: {}", stderr));
     }
 
     let mut log_file = create_log_file(&state.app_handle, &node_name)
@@ -457,6 +458,14 @@ pub fn send_input_to_node(
         .stdin
         .as_ref()
         .ok_or_else(|| eyre!("Node is not running: {}", node_name))?;
+
+    // Add the input to the node's output
+    {
+        let mut output = node_process.output
+            .lock()
+            .map_err(|e| eyre!("Failed to lock output: {}", e))?;
+        output.push_str(&format!("> {}\n", input));
+    }
 
     stdin
         .send(input)

@@ -11,7 +11,7 @@ export const Label = styled.label`
   color: #ffffff;
 `;
 
-export const StyledInput = styled.input<{ $hasError?: boolean }>`
+export const StyledInput = styled.input<{ $hasError?: boolean; $noMargin?: boolean; $showingCharCount?: boolean }>`
   width: 100%;
   height: 40px;
   padding: 0 12px;
@@ -26,7 +26,11 @@ export const StyledInput = styled.input<{ $hasError?: boolean }>`
     border-color 0.15s ease-in-out,
     box-shadow 0.15s ease-in-out;
   box-sizing: border-box;
-  margin-bottom: 0.5rem;
+  margin-bottom: ${props => {
+    if (props.$noMargin) return '0';
+    if (props.$showingCharCount) return '0';
+    return '0.5rem';
+  }};
 
   &:focus {
     color: #2c3e50;
@@ -62,4 +66,14 @@ export const ErrorMessage = styled.span`
   color: #e74c3c;
   font-size: 12px;
   margin-top: 0.25rem;
+`;
+
+export const InputContainer = styled.div<{ noMargin?: boolean; showingCharCount?: boolean }>`
+  display: flex;
+  flex-direction: column;
+  margin-bottom: ${props => {
+    if (props.noMargin) return '0';
+    if (props.showingCharCount) return '0';
+    return '1rem';
+  }};
 `;

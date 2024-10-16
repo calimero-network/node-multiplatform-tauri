@@ -179,6 +179,7 @@ const NodeControls: React.FC<NodeControlsProps> = ({ ...props }) => {
 
   const sendInput = async () => {
     if (input.trim()) {
+      setOutput((prevOutput) => prevOutput + `> ${input}\n`);
       try {
         await invoke('send_input', {
           nodeName: props.selectedNode.name,

@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Button from '../../common/button';
-import NodeConfig from '../nodeConfig';
 import {
   UpdateNodeConfigParams,
   CommandResponse,
@@ -9,13 +7,15 @@ import {
 import {
   OperationsContainer,
   NodeTitle,
-  NodeActions,
+  TabContainer,
+  Tab,
   MainContent,
 } from './Styled';
 import NodeControls from '../nodeControls';
+import NodeConfig from '../nodeConfig';
 import NodeLogs from '../nodeLogs';
-import { SectionTypes, TrayAction } from '../../../pages/dashboard';
 import DeleteNode from '../nodeDelete';
+import { SectionTypes, TrayAction } from '../../../pages/dashboard';
 import MessagePopup, {
   MessagePopupState,
   MessageType,
@@ -37,9 +37,7 @@ interface NodeOperationsProps {
 }
 
 const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
-  const [activeSection, setActiveSection] = useState<SectionTypes | null>(
-    'controls'
-  );
+  const [activeSection, setActiveSection] = useState<SectionTypes>('controls');
   const [messagePopup, setMessagePopup] = useState<MessagePopupState>({
     isOpen: false,
     message: '',
@@ -80,29 +78,45 @@ const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
   return (
     <OperationsContainer>
       <NodeTitle>Currently selected node: {props.selectedNode.name}</NodeTitle>
-      <NodeActions>
-        <Button onClick={() => setActiveSection('controls')} variant="primary">
+      <TabContainer>
+        <Tab
+          active={activeSection === 'controls'}
+          onClick={() => setActiveSection('controls')}
+        >
           Node Controls
-        </Button>
-        <Button onClick={() => setActiveSection('config')} variant="primary">
+        </Tab>
+        <Tab
+          active={activeSection === 'config'}
+          onClick={() => setActiveSection('config')}
+        >
           Configure Node
-        </Button>
-        <Button onClick={() => setActiveSection('logs')} variant="primary">
+        </Tab>
+        <Tab
+          active={activeSection === 'logs'}
+          onClick={() => setActiveSection('logs')}
+        >
           Node Logs
-        </Button>
-        <Button onClick={() => openAdminDashboard()} variant="primary">
+        </Tab>
+        <Tab
+          active={false}
+          onClick={openAdminDashboard}
+        >
           Admin Dashboard
-        </Button>
-        <Button onClick={() => setActiveSection('delete')} variant="warning">
+        </Tab>
+        <Tab
+          active={activeSection === 'delete'}
+          onClick={() => setActiveSection('delete')}
+        >
           Delete Node
-        </Button>
-      </NodeActions>
+        </Tab>
+      </TabContainer>
       <MainContent>
         {activeSection === 'config' && (
           <NodeConfig
             selectedNode={props.selectedNode}
             onConfigUpdate={props.handleNodeConfigUpdate}
-            onClose={() => setActiveSection(null)}
+            onClose={() => setActiveSection('controls')}
+            handleNodeSelect={props.handleNodeSelect}
           />
         )}
         {activeSection === 'controls' && (
@@ -118,7 +132,7 @@ const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
         {activeSection === 'logs' && (
           <NodeLogs
             selectedNode={props.selectedNode}
-            onClose={() => setActiveSection(null)}
+            onClose={() => setActiveSection('controls')}
           />
         )}
         {activeSection === 'delete' && (
@@ -126,7 +140,7 @@ const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
             handleDeleteNode={() =>
               props.handleNodeDelete(props.selectedNode.name)
             }
-            onCancel={() => setActiveSection(null)}
+            onCancel={() => setActiveSection('controls')}
             onDeleteSuccess={() => {
               props.handleNodeSelect('');
             }}

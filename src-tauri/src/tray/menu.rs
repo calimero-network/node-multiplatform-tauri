@@ -11,14 +11,30 @@ pub fn create_menu() -> Menu {
     // Create the "Run on Startup" menu item with initial state
     let run_on_startup_menu_item = CustomMenuItem::new("run_on_startup", "Run on Startup");
     let quit_app_menu_item = CustomMenuItem::new("quit", "Quit Calimero Node Manager");
-    // Create the main menu
-    let menu = Menu::new().add_submenu(Submenu::new(
-        "Calimero Node Manager",
+
+    // Create the Edit submenu
+    let edit_menu = Submenu::new(
+        "Edit",
         Menu::new()
-            .add_item(run_on_startup_menu_item)
+            .add_native_item(MenuItem::Undo)
+            .add_native_item(MenuItem::Redo)
             .add_native_item(MenuItem::Separator)
-            .add_item(quit_app_menu_item),
-    ));
+            .add_native_item(MenuItem::Cut)
+            .add_native_item(MenuItem::Copy)
+            .add_native_item(MenuItem::Paste)
+            .add_native_item(MenuItem::SelectAll),
+    );
+
+    // Create the main menu
+    let menu = Menu::new()
+        .add_submenu(Submenu::new(
+            "Calimero Node Manager",
+            Menu::new()
+                .add_item(run_on_startup_menu_item)
+                .add_native_item(MenuItem::Separator)
+                .add_item(quit_app_menu_item),
+        ))
+        .add_submenu(edit_menu);
 
     menu
 }

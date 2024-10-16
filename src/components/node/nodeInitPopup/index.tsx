@@ -6,6 +6,7 @@ import {
   PopupButtons,
   SuccessMessage,
   ErrorMessage,
+  CharacterCount,
 } from '../../common/popup/Styled';
 import { CommandResponse } from '../../../hooks/useNodeManagement';
 
@@ -17,21 +18,26 @@ interface NodeInitializationPopupProps {
     runOnStartup: boolean
   ) => Promise<CommandResponse>;
   onClose: () => void;
+  handleNodeSelect: (nodeName: string) => void;
 }
 
-const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({
-  onInitialize,
-  onClose,
-}) => {
+const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({...props}) => {
   const [nodeName, setNodeName] = useState('');
   const [serverPort, setServerPort] = useState('');
   const [swarmPort, setSwarmPort] = useState('');
   const [runOnStartup, setRunOnStartup] = useState(false);
   const [message, setMessage] = useState('');
 
+  const handleNodeNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.length <= 15) {
+      setNodeName(value);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const response = await onInitialize(
+    const response = await props.onInitialize(
       nodeName,
       parseInt(serverPort),
       parseInt(swarmPort),
@@ -39,10 +45,17 @@ const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({
     );
     if (response.success) {
       setMessage(response.message);
+
+      setTimeout(() => {
+        props.handleNodeSelect(nodeName);
+        props.onClose();
+      }, 1500); 
     } else {
       setMessage('Error: ' + response.message);
     }
   };
+
+  const isShowingCharCount = nodeName.length >= 10;
 
   return (
     <>
@@ -52,10 +65,18 @@ const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({
           label="Node Name"
           type="text"
           value={nodeName}
-          onChange={(e) => setNodeName(e.target.value)}
-          placeholder="Enter node name"
+          onChange={handleNodeNameChange}
+          placeholder="Enter node name (max 15 chars)"
           required
+          maxLength={15}
+          noMargin={isShowingCharCount}
+          showingCharCount={isShowingCharCount}
         />
+        {isShowingCharCount && (
+          <CharacterCount warning={nodeName.length >= 13}>
+            {nodeName.length}/15 characters
+          </CharacterCount>
+        )}
         <Input
           label="Server Port"
           type="number"
@@ -78,7 +99,7 @@ const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({
           onChange={(e) => setRunOnStartup(e.target.checked)}
         />
         <PopupButtons>
-          <Button type="button" variant="warning" onClick={onClose}>
+          <Button type="button" variant="warning" onClick={props.onClose}>
             Cancel
           </Button>
           <Button type="submit" variant="primary">

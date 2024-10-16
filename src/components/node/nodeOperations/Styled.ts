@@ -30,3 +30,24 @@ export const NodeActions = styled.div`
 export const MainContent = styled.div`
   display: block;
 `;
+
+export const TabContainer = styled.div`
+  display: flex;
+  border-bottom: 1px solid #ccc;
+  margin-bottom: 20px;
+`;
+
+export const Tab = styled.div<{ active: boolean }>`
+  padding: 10px 20px;
+  cursor: pointer;
+  // border: 1px solid #ccc;
+  border-bottom: none;
+  background-color: ${props => props.active ? '#000000' : '#2c2c2c'};
+  font-weight: ${props => props.active ? 'bold' : 'normal'};
+  border-radius: 5px 5px 0 0;
+  margin-right: 5px;
+
+  &:hover {
+    background-color: #000000;
+  }
+`;
