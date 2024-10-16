@@ -59,15 +59,25 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
-          sudo apt-get install -y libssl-dev pkg-config
+          sudo apt-get install -y libssl-dev:amd64 libssl-dev:arm64
           echo "CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
           echo "CC_aarch64_unknown_linux_gnu=aarch64-linux-gnu-gcc" >> $GITHUB_ENV
           echo "CXX_aarch64_unknown_linux_gnu=aarch64-linux-gnu-g++" >> $GITHUB_ENV
-          echo "OPENSSL_DIR=/usr" >> $GITHUB_ENV
-          echo "OPENSSL_LIB_DIR=/usr/lib" >> $GITHUB_ENV
-          echo "OPENSSL_INCLUDE_DIR=/usr/include" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig" >> $GITHUB_ENV
           echo "PKG_CONFIG_ALLOW_CROSS=1" >> $GITHUB_ENV
+
+      - name: Install OpenSSL for aarch64
+        if: matrix.args == '--target aarch64-unknown-linux-gnu'
+        run: |
+          wget https://www.openssl.org/source/openssl-1.1.1k.tar.gz
+          tar xzf openssl-1.1.1k.tar.gz
+          cd openssl-1.1.1k
+          ./Configure linux-aarch64 --prefix=$HOME/openssl --openssldir=$HOME/openssl no-shared
+          make -j$(nproc)
+          make install_sw
+          echo "OPENSSL_DIR=$HOME/openssl" >> $GITHUB_ENV
+          echo "OPENSSL_INCLUDE_DIR=$HOME/openssl/include" >> $GITHUB_ENV
+          echo "OPENSSL_LIB_DIR=$HOME/openssl/lib" >> $GITHUB_ENV
 
       - name: Install frontend dependencies
         run: pnpm install # change this to npm, pnpm or bun depending on which one you use.
