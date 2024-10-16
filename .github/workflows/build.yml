@@ -1,78 +1,62 @@
-name: Build
+name: 'publish'
 
 on:
   push:
     branches: [ '**' ]  # To run on any branch
   pull_request:
-    branches: [ '**' ]  # To run on any branch
+    branches: [ '**' ]
   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version to build (e.g., 1.0.0)'
-        required: true
-        default: '0.0.0'
 
 jobs:
-  build:
+  publish-tauri:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
-          - os: macos-latest
-            target: x86_64-apple-darwin
-          - os: macos-latest
-            target: aarch64-apple-darwin
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
+          - platform: 'macos-latest' # for Arm based macs (M1 and above).
+            args: '--target aarch64-apple-darwin'
+          - platform: 'macos-latest' # for Intel based macs.
+            args: '--target x86_64-apple-darwin'
+          - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
+            args: '--target x86_64-unknown-linux-gnu'
+          - platform: 'ubuntu-22.04' # for Tauri v1 you could replace this with ubuntu-20.04.
+            args: '--target aarch64-unknown-linux-gnu'
 
-    runs-on: ${{ matrix.os }}
-
+    runs-on: ${{ matrix.platform }}
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
 
-    - name: Install Rust stable
-      uses: actions-rs/toolchain@v1
-      with:
-        toolchain: stable
-        target: ${{ matrix.target }}
-        override: true
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          # Those targets are only used on macos runners so it's in an `if` to slightly speed up windows and linux builds.
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
-    - name: Install dependencies (ubuntu only)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf
+      - name: install dependencies (ubuntu only)
+        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.0-dev libappindicator3-dev librsvg2-dev patchelf
+        # webkitgtk 4.0 is for Tauri v1 - webkitgtk 4.1 is for Tauri v2.
+        # You can remove the one that doesn't apply to your app to speed up the workflow a bit.
 
-    - name: Install dependencies (macOS only)
-      if: matrix.os == 'macos-latest'
-      run: |
-        brew install gtk+3 webkit2gtk3 libappindicator
+      - name: install frontend dependencies
+        run: pnpm install # change this to npm, pnpm or bun depending on which one you use.
 
-    - name: Install app dependencies and build web
-      run: yarn && yarn build
-
-    - name: Build Tauri app
-      uses: tauri-apps/tauri-action@v0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tagName: v${{ github.event.inputs.version || '__VERSION__' }}
-        releaseName: "App v${{ github.event.inputs.version || '__VERSION__' }}"
-        releaseBody: "See the assets to download this version and install."
-        releaseDraft: true
-        prerelease: false
-        args: --target ${{ matrix.target }}
-
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: meroctl-${{ matrix.target }}-${{ github.event.inputs.version || 'latest' }}
-        path: |
-          src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*
-          src-tauri/target/${{ matrix.target }}/release/bundle/deb/*
-          src-tauri/target/${{ matrix.target }}/release/bundle/appimage/*
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
+          releaseName: 'App v__VERSION__'
+          releaseBody: 'See the assets to download this version and install.'
+          releaseDraft: true
+          prerelease: false
+          args: ${{ matrix.args }}
