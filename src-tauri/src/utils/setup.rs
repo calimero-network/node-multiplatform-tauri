@@ -120,7 +120,15 @@ fn get_auto_launch(app: &AppHandle) -> Result<AutoLaunch, Box<dyn std::error::Er
             .to_str()
             .ok_or("Failed to convert executable path to string")?;
 
-        *auto_launch = Some(AutoLaunch::new(&app_name, app_path, true, &[] as &[&str]));
+        #[cfg(target_os = "linux")]
+        {
+            *auto_launch = Some(AutoLaunch::new(&app_name, app_path, &[] as &[&str]));
+        }
+
+        #[cfg(not(target_os = "linux"))]
+        {
+            *auto_launch = Some(AutoLaunch::new(&app_name, app_path, true, &[] as &[&str]));
+        }
     }
 
     Ok(auto_launch.as_ref().unwrap().clone())
