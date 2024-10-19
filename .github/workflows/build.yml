@@ -1,11 +1,15 @@
 name: 'publish'
 
 on:
-  push:
-    branches: [ '**' ]  # To run on any branch
-  pull_request:
-    branches: [ '**' ]
   workflow_dispatch:
+  push:
+    branches:
+      - master  # Explicitly set to master
+    paths:
+      - 'node-ui/**'
+  pull_request:
+    types:
+      - closed
 
 jobs:
   publish-tauri:
