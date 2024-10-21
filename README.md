@@ -10,12 +10,13 @@ This is a [Tauri](https://tauri.app/) desktop application created using Node.js 
 ## Getting Started
 
 1. Clone the repository:
-2. 
+
    ```bash
    git clone https://github.com/calimero-network/node-multiplatform-tauri.git
    ```
 
 3. Navigate to the project directory:
+
    ```bash
    cd node-multiplatform-tauri
    ```
