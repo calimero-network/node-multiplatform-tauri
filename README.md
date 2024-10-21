@@ -10,21 +10,22 @@ This is a [Tauri](https://tauri.app/) desktop application created using Node.js 
 ## Getting Started
 
 1. Clone the repository:
+2. 
    ```bash
    git clone https://github.com/calimero-network/node-multiplatform-tauri.git
    ```
 
-2. Navigate to the project directory:
+3. Navigate to the project directory:
    ```bash
    cd node-multiplatform-tauri
    ```
 
-3. Install the dependencies:
+4. Install the dependencies:
    ```bash
    npm install
    ```
 
-4. Run the development environment:
+5. Run the development environment:
    ```bash
    npm run tauri dev
    ```
