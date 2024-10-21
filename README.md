@@ -30,7 +30,7 @@ This is a [Tauri](https://tauri.app/) desktop application created using Node.js 
    ```bash
    npm run tauri dev
    ```
-
+    
 ## Build
 
 To create a production build of the application, run:
