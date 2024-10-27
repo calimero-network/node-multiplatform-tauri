@@ -49,7 +49,10 @@ To create a production build of the application, run:
 pnpm run tauri build
 ```
 
+- The build process automatically downloads the Calimero node binary directly from the github release page based on the target architecture, if target architecture is not explicitly specified, Tauri will use the host architecture.
 - In production mode, the Calimero node binary is stored in the `resources` folder.
+- The build process will fail if the target architecture is not supported by the Calimero node binary release page.
+- After building process is complete, the Calimero node binary will be stored in the `src-tauri/target` folder, exact path will be displayed in the terminal after build process is complete.
 
 ## Features
 
