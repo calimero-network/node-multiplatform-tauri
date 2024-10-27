@@ -28,6 +28,7 @@ export const TerminalOutput = styled.pre`
   margin: 0;
   padding: 5px;
   font-size: 12px;
+  max-height: 500px;
 `;
 
 export const TerminalForm = styled.form`
