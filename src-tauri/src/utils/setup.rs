@@ -51,6 +51,14 @@ pub fn setup_app_state(app_handle: AppHandle, store: Store<Wry>) -> Result<AppSt
     })
 }
 
+pub fn setup_app_folders(app_handle: &AppHandle) -> Result<()> {
+    let nodes_dir = get_nodes_dir(app_handle);
+    if !nodes_dir.exists() {
+        fs::create_dir_all(nodes_dir).map_err(|e| eyre!("Failed to create nodes directory: {}", e))?;
+    }
+    Ok(())
+}
+
 // Run start_nodes_on_startup
 pub fn run_nodes_on_startup(state: &State<'_, AppState>) -> Result<(), Box<dyn std::error::Error>> {
     let app_handle_clone = state.app_handle.clone();

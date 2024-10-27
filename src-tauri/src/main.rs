@@ -6,7 +6,7 @@ use node_multiplatform_tauri::tray::menu::{create_menu, handle_menu_click};
 use node_multiplatform_tauri::tray::{handle_tray_click, update_tray_menu};
 use node_multiplatform_tauri::types::AppState;
 use node_multiplatform_tauri::utils::setup::{
-    run_nodes_on_startup, setup_app_state, setup_auto_launch, setup_store,
+    run_nodes_on_startup, setup_app_folders, setup_app_state, setup_auto_launch, setup_store
 };
 use tauri::{Manager, SystemTray, SystemTrayEvent, SystemTrayMenu, WindowEvent};
 
@@ -21,6 +21,9 @@ fn main() -> eyre::Result<()> {
             let app_handle = app.handle();
             // Initialize store
             let store = setup_store(app)?;
+
+            // Initialize app folders
+            setup_app_folders(&app_handle)?;
 
             // Get the run_app_on_startup value from the store
             let run_app_on_startup = store
