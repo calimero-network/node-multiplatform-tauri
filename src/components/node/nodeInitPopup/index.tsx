@@ -62,11 +62,11 @@ const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({...pro
       <h2>Initialize Node</h2>
       <form onSubmit={handleSubmit}>
         <Input
-          label="Node Name"
+          label="Node Name (max 15 chars)"
           type="text"
           value={nodeName}
           onChange={handleNodeNameChange}
-          placeholder="Enter node name (max 15 chars)"
+          placeholder="e.g. node1"
           required
           maxLength={15}
           noMargin={isShowingCharCount}
@@ -82,7 +82,9 @@ const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({...pro
           type="number"
           value={serverPort}
           onChange={(e) => setServerPort(e.target.value)}
-          placeholder="Enter server port"
+          placeholder="e.g. 2428"
+          min="1024"
+          max="65535"
           required
         />
         <Input
@@ -90,7 +92,9 @@ const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({...pro
           type="number"
           value={swarmPort}
           onChange={(e) => setSwarmPort(e.target.value)}
-          placeholder="Enter swarm port"
+          placeholder="e.g.2528"
+          min="1024"
+          max="65535"
           required
         />
         <Checkbox
