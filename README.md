@@ -35,6 +35,12 @@ This is a [Tauri](https://tauri.app/) desktop application created using Node.js 
    - In development mode, the Calimero node binary is stored in the `src-tauri/bin` folder.
    - Depending on the `--target` flag during the build or the user's operating system, the app automatically downloads the Calimero node binary directly from the github release page.
 
+   The following `--target` flags are supported for different architectures:
+    - `--target aarch64-apple-darwin`: For ARM-based macOS (M1 and above)
+    - `--target x86_64-apple-darwin`: For Intel-based macOS
+    - `--target x86_64-unknown-linux-gnu`: For x86_64 Linux systems
+    - `--target aarch64-unknown-linux-gnu`: For ARM-based Linux systems
+
 ## Build
 
 To create a production build of the application, run:
