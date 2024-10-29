@@ -21,7 +21,9 @@ interface NodeInitializationPopupProps {
   handleNodeSelect: (nodeName: string) => void;
 }
 
-const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({...props}) => {
+const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({
+  ...props
+}) => {
   const [nodeName, setNodeName] = useState('');
   const [serverPort, setServerPort] = useState('');
   const [swarmPort, setSwarmPort] = useState('');
@@ -49,7 +51,7 @@ const NodeInitializationPopup: React.FC<NodeInitializationPopupProps> = ({...pro
       setTimeout(() => {
         props.handleNodeSelect(nodeName);
         props.onClose();
-      }, 1500); 
+      }, 1500);
     } else {
       setMessage('Error: ' + response.message);
     }

@@ -7,11 +7,20 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   showingCharCount?: boolean;
 }
 
-const Input: React.FC<InputProps> = ({ label, noMargin, showingCharCount, ...props }) => {
+const Input: React.FC<InputProps> = ({
+  label,
+  noMargin,
+  showingCharCount,
+  ...props
+}) => {
   return (
     <InputContainer noMargin={noMargin} showingCharCount={showingCharCount}>
       <Label>{label}</Label>
-      <StyledInput $noMargin={noMargin} $showingCharCount={showingCharCount} {...props} />
+      <StyledInput
+        $noMargin={noMargin}
+        $showingCharCount={showingCharCount}
+        {...props}
+      />
     </InputContainer>
   );
 };
