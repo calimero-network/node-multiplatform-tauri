@@ -42,8 +42,8 @@ export const Tab = styled.div<{ active: boolean }>`
   cursor: pointer;
   // border: 1px solid #ccc;
   border-bottom: none;
-  background-color: ${props => props.active ? '#000000' : '#2c2c2c'};
-  font-weight: ${props => props.active ? 'bold' : 'normal'};
+  background-color: ${(props) => (props.active ? '#000000' : '#2c2c2c')};
+  font-weight: ${(props) => (props.active ? 'bold' : 'normal')};
   border-radius: 5px 5px 0 0;
   margin-right: 5px;
 

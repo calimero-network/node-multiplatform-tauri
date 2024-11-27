@@ -97,10 +97,7 @@ const NodeOperations: React.FC<NodeOperationsProps> = ({ ...props }) => {
         >
           Node Logs
         </Tab>
-        <Tab
-          active={false}
-          onClick={openAdminDashboard}
-        >
+        <Tab active={false} onClick={openAdminDashboard}>
           Admin Dashboard
         </Tab>
         <Tab

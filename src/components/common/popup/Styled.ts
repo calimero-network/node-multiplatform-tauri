@@ -44,7 +44,7 @@ export const ErrorMessage = styled.p`
 
 export const CharacterCount = styled.small<{ warning: boolean }>`
   display: block;
-  color: ${props => props.warning ? 'orange' : 'inherit'};
+  color: ${(props) => (props.warning ? 'orange' : 'inherit')};
   font-style: italic;
   margin-bottom: 1rem;
 `;
