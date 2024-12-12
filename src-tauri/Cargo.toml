@@ -13,8 +13,10 @@ tauri = { version = "1" }
 flate2 = "1.0.34"
 eyre = "0.6.12"
 tar = "0.4.42"
-reqwest = "0.12.8"
+reqwest = { version = "0.12.8", features = ["json"] }
 shared_utils = { path = "./shared_utils" }
+serde_json = "1"
+tokio = "1.42.0"
 
 [dependencies]
 auto-launch = "0.5.0"
@@ -32,6 +34,7 @@ flate2 = "1.0.34"
 tar = "0.4.42"
 reqwest = "0.12.8"
 shared_utils = { path = "./shared_utils" }
+anyhow = "1.0.94"
 
 [features]
 # This feature is used for production builds or when a dev server is not specified, DO NOT REMOVE!!
