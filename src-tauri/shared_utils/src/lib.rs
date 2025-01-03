@@ -6,7 +6,7 @@ pub fn determine_bin_data() -> (String, String, String) {
         let parts: Vec<&str> = target.split('-').collect();
         let os = parts[2];
         let arch = parts[0];
-        let binary_name = format!("meroctl_{}", target);
+        let binary_name = format!("merod_{}", target);
         (os.to_string(), arch.to_string(), binary_name)
     } else {
         let os = match OS {
@@ -21,10 +21,10 @@ pub fn determine_bin_data() -> (String, String, String) {
 
 pub fn map_os_arch_to_binary_name(os: &str, arch: &str) -> String {
     match (os, arch) {
-        ("windows", "x86_64") => "meroctl-x86_64-pc-windows-msvc",
-        ("darwin", "x86_64") => "meroctl_x86_64-apple-darwin",
-        ("darwin", "aarch64") => "meroctl_aarch64-apple-darwin",
-        ("linux", "x86_64") => "meroctl_x86_64-unknown-linux-gnu",
+        ("windows", "x86_64") => "merod-x86_64-pc-windows-msvc",
+        ("darwin", "x86_64") => "merod_x86_64-apple-darwin",
+        ("darwin", "aarch64") => "merod_aarch64-apple-darwin",
+        ("linux", "x86_64") => "merod_x86_64-unknown-linux-gnu",
         // Add more combinations as needed
         _ => panic!("Unsupported OS/architecture combination: {}/{}", os, arch),
     }
