@@ -44,9 +44,9 @@ pub fn get_binary_path(app_handle: &AppHandle) -> Result<PathBuf> {
             .join("bin")
             .join(os)
             .join(arch)
-            .join("meroctl"))
+            .join("merod"))
     } else {
-        let relative_path = format!("bin/{}/{}/meroctl", os, arch);
+        let relative_path = format!("bin/{}/{}/merod", os, arch);
         app_handle
             .path_resolver()
             .resolve_resource(&relative_path)
@@ -60,7 +60,7 @@ pub fn is_node_process_running(app_handle: &AppHandle, node_name: &str) -> Resul
     );
 
     let pattern = format!(
-        r"meroctl.*--node-name\s+\b{}\b.*run",
+        r"merod.*--node-name\s+\b{}\b.*run",
         regex_escape(node_name)
     );
     let re = Regex::new(&pattern).map_err(|e| eyre!("Failed to create regex: {}", e))?;
@@ -170,7 +170,7 @@ pub fn check_ports_availability(config: &NodeConfig) -> Result<()> {
 // Kill the node process
 pub fn kill_node_process(node_name: &str) -> std::io::Result<()> {
     let output = Command::new("pkill")
-        .args(&["-f", &format!("meroctl.*--node-name {}.*run", node_name)])
+        .args(&["-f", &format!("merod.*--node-name {}.*run", node_name)])
         .output()?;
 
     if !output.status.success() {
